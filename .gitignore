@@ -1,0 +1,158 @@
+##############################################
+# ROOT: MONOREPO IGNORE
+##############################################
+
+# Dependencies (all workspaces)
+node_modules/
+**/node_modules/
+
+# Build outputs (all workspaces)
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+.eslintcache
+.stylelintcache
+tsconfig.tsbuildinfo
+vite-cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+##############################################
+# ENV FILES (never commit secrets)
+##############################################
+
+# Root & workspace env files
+.env
+.env.*
+!.env.example
+
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+
+# Config folder envs
+config/*.env
+
+##############################################
+# OS / EDITOR
+##############################################
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+##############################################
+# SSL / CERTIFICATE FILES
+##############################################
+certs/
+ssl/
+*.pem
+*.key
+*.csr
+*.crt
+*.pfx
+*.jks
+
+# Certbot generated
+certbot-logs/
+letsencrypt/
+**/letsencrypt/
+var/log/letsencrypt/
+var/lib/letsencrypt/
+
+##############################################
+# BACKEND (Node + TypeScript)
+##############################################
+
+backend/dist/
+backend/build/
+backend/.tsbuildinfo
+backend/coverage/
+backend/typings/
+
+# Local DB files
+backend/dump/
+backend/data/
+backend/mongodb-data/
+backend/db.sqlite
+backend/db/
+
+# File uploads / static storage
+backend/public/uploads/
+backend/uploads/
+backend/storage/
+
+##############################################
+# FRONTEND (Vite + React)
+##############################################
+
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+frontend/node_modules/
+frontend/src/generated/
+frontend/public/assets/
+frontend/public/generated/
+frontend/.eslintcache
+frontend/.stylelintcache
+
+##############################################
+# DOCKER / DEPLOYMENT
+##############################################
+
+docker-data/
+docker-volumes/
+*.tar
+*.img
+*.iso
+docker-compose.override.yml
+**/volumes/
+**/docker-data/
+**/data/
+
+##############################################
+# TESTING (Cypress / Playwright / Jest)
+##############################################
+
+coverage/
+test-output/
+cypress/videos/
+cypress/screenshots/
+playwright-report/
+test-report/
+
+##############################################
+# EMAIL DEV TOOLS (optional)
+##############################################
+
+maildev/
+mail/
+tmp-emails/
+
+##############################################
+# DEV SSL (for local HTTPS)
+##############################################
+
+.dev-ssl/
+localhost-cert/
+
+##############################################
+# AI / MODEL CACHE (if used)
+##############################################
+
+models/
+models-cache/
+
