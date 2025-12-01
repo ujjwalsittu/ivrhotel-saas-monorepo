@@ -17,7 +17,11 @@ const createHotelSchema = z.object({
         country: z.string(),
         zipCode: z.string(),
     }),
-    authorizedSignatory: z.string(),
+    authorizedSignatory: z.object({
+        name: z.string(),
+        phone: z.string(),
+        signature: z.string().optional()
+    }),
     hotelType: z.string(),
     handlingType: z.string(),
 });
@@ -25,6 +29,8 @@ const createHotelSchema = z.object({
 export const createHotel = async (req: Request, res: Response) => {
     try {
         const validatedData = createHotelSchema.parse(req.body);
+        const user = (req as any).user;
+        const session = (req as any).session;
 
         // Check if slug exists
         const existingHotel = await Hotel.findOne({ slug: validatedData.slug });
@@ -32,8 +38,24 @@ export const createHotel = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Hotel with this slug already exists' });
         }
 
+        // Get active organization from session or request
+        // Assuming better-auth puts activeOrganizationId in session or we use the first one
+        // For now, let's assume the user MUST be in an organization context to create a hotel
+        // OR we create a new organization for this hotel?
+        // The requirement says "Link to better-auth Organization".
+        // Let's assume the user passes organizationId or we use the one from session.
+
+        let organizationId = req.body.organizationId;
+        if (!organizationId && session.activeOrganizationId) {
+            organizationId = session.activeOrganizationId;
+        }
+
+        // If no organization, maybe we should fail or create one?
+        // For now, let's make it optional but recommended.
+
         const hotel = new Hotel({
             ...validatedData,
+            organizationId,
             status: 'PENDING',
         });
 
@@ -65,64 +87,6 @@ export const getHotel = async (req: Request, res: Response) => {
         if (!hotel) {
             return res.status(404).json({ message: 'Hotel not found' });
         }
-
-        res.json(hotel);
-    } catch (error) {
-        res.status(500).json({ message: 'Internal Server Error', error });
-    }
-};
-
-export const updateHotelDocuments = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const files = req.files as Express.Multer.File[];
-
-        if (!files || files.length === 0) {
-            return res.status(400).json({ message: 'No files uploaded' });
-        }
-
-        const documents = files.map(file => ({
-            type: 'KYC', // Default type for now, can be passed in body
-            url: `/uploads/${file.filename}`,
-            verified: false
-        }));
-
-        const hotel = await Hotel.findByIdAndUpdate(
-            id,
-            { $push: { kycDocuments: { $each: documents } } },
-            { new: true }
-        );
-
-        if (!hotel) {
-            return res.status(404).json({ message: 'Hotel not found' });
-        }
-
-        res.json(hotel);
-    } catch (error) {
-        res.status(500).json({ message: 'Internal Server Error', error });
-    }
-};
-
-export const verifyHotel = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { status, comments } = req.body; // status: 'ACTIVE' | 'REJECTED'
-
-        if (!['ACTIVE', 'REJECTED'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid status' });
-        }
-
-        const hotel = await Hotel.findByIdAndUpdate(
-            id,
-            { status, $push: { comments: { text: comments, date: new Date() } } }, // Assuming we add a comments field to schema later or just log it
-            { new: true }
-        );
-
-        if (!hotel) {
-            return res.status(404).json({ message: 'Hotel not found' });
-        }
-
-        // TODO: Send email to hotel admin
 
         res.json(hotel);
     } catch (error) {

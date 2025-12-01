@@ -37,6 +37,13 @@ const FloorManagement: React.FC = () => {
     const [floors, setFloors] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
 
+    // Bulk Creation State
+    const [isBulk, setIsBulk] = useState(false);
+    const [bulkStart, setBulkStart] = useState(1);
+    const [bulkEnd, setBulkEnd] = useState(5);
+    const [bulkPattern, setBulkPattern] = useState("Floor {n}");
+    const [bulkBlock, setBulkBlock] = useState("");
+
     // Pagination & Search State
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -118,6 +125,32 @@ const FloorManagement: React.FC = () => {
         form.reset({ number: 0, name: "", block: "" });
     };
 
+    const handleBulkSubmit = async () => {
+        if (bulkEnd < bulkStart) {
+            alert("End number must be greater than or equal to start number");
+            return;
+        }
+
+        const floorsToCreate = [];
+        for (let i = bulkStart; i <= bulkEnd; i++) {
+            floorsToCreate.push({
+                number: i,
+                name: bulkPattern.replace("{n}", i.toString()),
+                block: bulkBlock || undefined
+            });
+        }
+
+        try {
+            await api.post(`/hotels/${hotelId}/floors/bulk`, floorsToCreate);
+            fetchFloors();
+            setIsBulk(false);
+            alert(`Successfully created ${floorsToCreate.length} floors`);
+        } catch (error) {
+            console.error('Error creating floors:', error);
+            alert('Failed to create floors');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <Card>
@@ -125,55 +158,110 @@ const FloorManagement: React.FC = () => {
                     <CardTitle>Add Floor</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4 items-end">
-                            <FormField
-                                control={form.control}
-                                name="number"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Number</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" {...field} value={field.value as number} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Name</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Ground Floor" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="block"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Block (Optional)</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Wing A" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <div className="flex gap-2">
-                                <Button type="submit">{editingId ? 'Update' : 'Add'} Floor</Button>
-                                {editingId && (
-                                    <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                                )}
+                    <div className="flex gap-4 mb-4">
+                        <Button
+                            variant={!isBulk ? "default" : "outline"}
+                            onClick={() => setIsBulk(false)}
+                        >
+                            Single Floor
+                        </Button>
+                        <Button
+                            variant={isBulk ? "default" : "outline"}
+                            onClick={() => setIsBulk(true)}
+                        >
+                            Bulk Create
+                        </Button>
+                    </div>
+
+                    {!isBulk ? (
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4 items-end">
+                                <FormField
+                                    control={form.control}
+                                    name="number"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Number</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} value={field.value as number} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Ground Floor" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="block"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Block (Optional)</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Wing A" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex gap-2">
+                                    <Button type="submit">{editingId ? 'Update' : 'Add'} Floor</Button>
+                                    {editingId && (
+                                        <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                                    )}
+                                </div>
+                            </form>
+                        </Form>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <FormLabel>Start Number</FormLabel>
+                                    <Input
+                                        type="number"
+                                        value={bulkStart}
+                                        onChange={(e) => setBulkStart(parseInt(e.target.value))}
+                                    />
+                                </div>
+                                <div>
+                                    <FormLabel>End Number</FormLabel>
+                                    <Input
+                                        type="number"
+                                        value={bulkEnd}
+                                        onChange={(e) => setBulkEnd(parseInt(e.target.value))}
+                                    />
+                                </div>
+                                <div>
+                                    <FormLabel>Name Pattern (e.g., Floor {'{n}'})</FormLabel>
+                                    <Input
+                                        value={bulkPattern}
+                                        onChange={(e) => setBulkPattern(e.target.value)}
+                                        placeholder="Floor {n}"
+                                    />
+                                </div>
+                                <div>
+                                    <FormLabel>Block (Optional)</FormLabel>
+                                    <Input
+                                        value={bulkBlock}
+                                        onChange={(e) => setBulkBlock(e.target.value)}
+                                        placeholder="Wing A"
+                                    />
+                                </div>
                             </div>
-                        </form>
-                    </Form>
+                            <Button onClick={handleBulkSubmit}>Generate & Create Floors</Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

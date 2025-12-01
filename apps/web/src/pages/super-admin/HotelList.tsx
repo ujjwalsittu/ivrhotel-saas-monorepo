@@ -24,7 +24,12 @@ const HotelList: React.FC = () => {
 
     const verifyHotel = async (id: string, status: 'ACTIVE' | 'REJECTED') => {
         try {
-            await api.post(`/hotels/${id}/verify`, { status, comments: 'Verified by Super Admin' });
+            if (status === 'ACTIVE') {
+                await api.post(`/hotels/${id}/onboarding/approve`);
+            } else {
+                // Implement reject logic if needed
+                console.log('Reject logic not implemented yet');
+            }
             fetchHotels();
         } catch (error) {
             console.error('Error verifying hotel:', error);

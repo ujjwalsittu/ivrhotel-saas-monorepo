@@ -27,6 +27,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
  * @param hotelIdParam - The parameter name for hotel ID
  * @param requiredRole - Optional role required within the hotel (e.g., 'hotel_admin', 'front_desk')
  */
+import { Hotel } from '../models/Hotel';
+
 export const requireHotel = (hotelIdParam = 'hotelId', requiredRole?: string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -40,30 +42,46 @@ export const requireHotel = (hotelIdParam = 'hotelId', requiredRole?: string) =>
                 return res.status(400).json({ message: 'Hotel ID is required' });
             }
 
-            // Check if user is a member of the organization (hotel)
-            const memberships = await auth.api.listOrganizations({
-                headers: req.headers as unknown as HeadersInit
+            // Fetch the hotel to get the organizationId
+            const hotel = await Hotel.findById(hotelId);
+            if (!hotel) {
+                return res.status(404).json({ message: 'Hotel not found' });
+            }
+
+            if (!hotel.organizationId) {
+                // If hotel has no organization linked, maybe only super admin can access?
+                // Or it's a data integrity issue.
+                if (user.role !== 'super_admin') {
+                    return res.status(403).json({ message: 'Forbidden: Hotel not linked to organization' });
+                }
+            }
+
+            // Check if user is a member of the organization
+            // listOrganizations does not return role. We need to check membership explicitly.
+            // We can use listMembers for the organization and find the user.
+            // Note: This might be inefficient for large orgs. Better-auth might have getMember.
+
+            const response = await auth.api.listMembers({
+                headers: req.headers as unknown as HeadersInit,
+                query: {
+                    organizationId: hotel.organizationId!
+                }
             });
 
-            // Note: listOrganizations returns array of organizations, we need to check membership
-            // Better approach: use getFullOrganization or check user's active organization
-
-            // For now, let's assume we can verify membership via API or session
-            // In better-auth, active organization is often stored in session or we query it
-
-            const membership = memberships?.find(org => org.id === hotelId);
+            const members = response.members;
+            console.log('DEBUG: requireHotel members:', members.length, 'User ID:', user.id);
+            const membership = members.find(member => member.userId === user.id);
+            console.log('DEBUG: requireHotel membership:', membership);
 
             // Allow Super Admin to bypass
             if (!membership && user.role !== 'super_admin') {
+                console.log('DEBUG: requireHotel Forbidden: No membership');
                 return res.status(403).json({ message: 'Forbidden: No access to this hotel' });
             }
 
             // If a specific role is required, check it (unless super_admin)
             if (requiredRole && user.role !== 'super_admin') {
-                // membership.role is the role in the organization
-                // We need to check if the user's role in this org matches or has higher priority
-                // For MVP, let's just check exact match or 'owner'/'admin'
-                const userOrgRole = (membership as any)?.role;
+                const userOrgRole = membership?.role as string;
                 if (userOrgRole !== requiredRole && userOrgRole !== 'owner' && userOrgRole !== 'admin' && userOrgRole !== 'hotel_admin') {
                     return res.status(403).json({ message: `Forbidden: Requires ${requiredRole} role` });
                 }

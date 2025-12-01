@@ -42,6 +42,13 @@ const RoomManagement: React.FC = () => {
     const [roomTypes, setRoomTypes] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
 
+    // Bulk Creation State
+    const [isBulk, setIsBulk] = useState(false);
+    const [bulkStart, setBulkStart] = useState(101);
+    const [bulkEnd, setBulkEnd] = useState(110);
+    const [bulkFloorId, setBulkFloorId] = useState("");
+    const [bulkRoomTypeId, setBulkRoomTypeId] = useState("");
+
     // Pagination & Search State
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -146,6 +153,36 @@ const RoomManagement: React.FC = () => {
         form.reset({ number: "", floorId: "", roomTypeId: "" });
     };
 
+    const handleBulkSubmit = async () => {
+        if (bulkEnd < bulkStart) {
+            alert("End number must be greater than or equal to start number");
+            return;
+        }
+        if (!bulkFloorId || !bulkRoomTypeId) {
+            alert("Please select a floor and room type");
+            return;
+        }
+
+        const roomsToCreate = [];
+        for (let i = bulkStart; i <= bulkEnd; i++) {
+            roomsToCreate.push({
+                number: i.toString(),
+                floorId: bulkFloorId,
+                roomTypeId: bulkRoomTypeId
+            });
+        }
+
+        try {
+            await api.post(`/hotels/${hotelId}/rooms/bulk`, roomsToCreate);
+            fetchRooms();
+            setIsBulk(false);
+            alert(`Successfully created ${roomsToCreate.length} rooms`);
+        } catch (error) {
+            console.error('Error creating rooms:', error);
+            alert('Failed to create rooms');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <Card>
@@ -153,77 +190,146 @@ const RoomManagement: React.FC = () => {
                     <CardTitle>Add Room</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4 items-end">
-                            <FormField
-                                control={form.control}
-                                name="number"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Room Number</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="101" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="floorId"
-                                render={({ field }) => (
-                                    <FormItem className="w-[200px]">
-                                        <FormLabel>Floor</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <div className="flex gap-4 mb-4">
+                        <Button
+                            variant={!isBulk ? "default" : "outline"}
+                            onClick={() => setIsBulk(false)}
+                        >
+                            Single Room
+                        </Button>
+                        <Button
+                            variant={isBulk ? "default" : "outline"}
+                            onClick={() => setIsBulk(true)}
+                        >
+                            Bulk Create
+                        </Button>
+                    </div>
+
+                    {!isBulk ? (
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4 items-end">
+                                <FormField
+                                    control={form.control}
+                                    name="number"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Room Number</FormLabel>
                                             <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select floor" />
-                                                </SelectTrigger>
+                                                <Input placeholder="101" {...field} />
                                             </FormControl>
-                                            <SelectContent>
-                                                {floors.map((floor: any) => (
-                                                    <SelectItem key={floor._id} value={floor._id}>
-                                                        {floor.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="roomTypeId"
-                                render={({ field }) => (
-                                    <FormItem className="w-[200px]">
-                                        <FormLabel>Room Type</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select type" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {roomTypes.map((type: any) => (
-                                                    <SelectItem key={type._id} value={type._id}>
-                                                        {type.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <div className="flex gap-2">
-                                <Button type="submit">{editingId ? 'Update' : 'Add'} Room</Button>
-                                {editingId && (
-                                    <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                                )}
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="floorId"
+                                    render={({ field }) => (
+                                        <FormItem className="w-[200px]">
+                                            <FormLabel>Floor</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select floor" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {floors.map((floor: any) => (
+                                                        <SelectItem key={floor._id} value={floor._id}>
+                                                            {floor.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="roomTypeId"
+                                    render={({ field }) => (
+                                        <FormItem className="w-[200px]">
+                                            <FormLabel>Room Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select type" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {roomTypes.map((type: any) => (
+                                                        <SelectItem key={type._id} value={type._id}>
+                                                            {type.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex gap-2">
+                                    <Button type="submit">{editingId ? 'Update' : 'Add'} Room</Button>
+                                    {editingId && (
+                                        <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                                    )}
+                                </div>
+                            </form>
+                        </Form>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <FormLabel>Start Number</FormLabel>
+                                    <Input
+                                        type="number"
+                                        value={bulkStart}
+                                        onChange={(e) => setBulkStart(parseInt(e.target.value))}
+                                    />
+                                </div>
+                                <div>
+                                    <FormLabel>End Number</FormLabel>
+                                    <Input
+                                        type="number"
+                                        value={bulkEnd}
+                                        onChange={(e) => setBulkEnd(parseInt(e.target.value))}
+                                    />
+                                </div>
+                                <div>
+                                    <FormLabel>Floor</FormLabel>
+                                    <Select onValueChange={setBulkFloorId} value={bulkFloorId}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select floor" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {floors.map((floor: any) => (
+                                                <SelectItem key={floor._id} value={floor._id}>
+                                                    {floor.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <FormLabel>Room Type</FormLabel>
+                                    <Select onValueChange={setBulkRoomTypeId} value={bulkRoomTypeId}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {roomTypes.map((type: any) => (
+                                                <SelectItem key={type._id} value={type._id}>
+                                                    {type.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                        </form>
-                    </Form>
+                            <Button onClick={handleBulkSubmit}>Generate & Create Rooms</Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

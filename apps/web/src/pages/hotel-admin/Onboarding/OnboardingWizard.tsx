@@ -62,16 +62,28 @@ const OnboardingWizard: React.FC = () => {
         try {
             const response = await api.get(`/hotels/${hotelId}`);
             setFormData(response.data);
-            // Load uploaded files
+
+            // Load uploaded files and flatten nested structure
             if (response.data.documents) {
                 const docs: any = {};
-                Object.keys(response.data.documents).forEach(key => {
-                    if (response.data.documents[key]?.url) {
-                        docs[key] = response.data.documents[key].url;
-                    }
-                });
+
+                const flattenDocs = (obj: any, prefix = '') => {
+                    Object.keys(obj).forEach(key => {
+                        const value = obj[key];
+                        const newKey = prefix ? `${prefix}.${key}` : key;
+
+                        if (value && typeof value === 'object' && 'url' in value) {
+                            docs[newKey] = value.url;
+                        } else if (value && typeof value === 'object') {
+                            flattenDocs(value, newKey);
+                        }
+                    });
+                };
+
+                flattenDocs(response.data.documents);
                 setUploadedDocs(docs);
             }
+
             if (response.data.photos) {
                 setUploadedPhotos(response.data.photos);
             }

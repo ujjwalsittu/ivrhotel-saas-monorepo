@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+import { authClient } from '@/lib/auth-client';
+
 const formSchema = z.object({
     name: z.string().min(2, {
         message: "Hotel name must be at least 2 characters.",
@@ -27,7 +29,17 @@ const formSchema = z.object({
         message: "Contact number must be valid.",
     }),
     email: z.string().email(),
-    authorizedSignatory: z.string().min(2),
+    authorizedSignatory: z.object({
+        name: z.string().min(2, { message: "Name is required" }),
+        phone: z.string().min(10, { message: "Phone is required" }),
+    }),
+    address: z.object({
+        street: z.string().min(2, { message: "Street is required" }),
+        city: z.string().min(2, { message: "City is required" }),
+        state: z.string().min(2, { message: "State is required" }),
+        country: z.string().min(2, { message: "Country is required" }),
+        zipCode: z.string().min(5, { message: "Zip Code is required" }),
+    }),
     hotelType: z.string(),
     handlingType: z.string(),
 });
@@ -44,7 +56,17 @@ const HotelOnboarding: React.FC = () => {
             slug: "",
             contactNumber: "",
             email: "",
-            authorizedSignatory: "",
+            authorizedSignatory: {
+                name: "",
+                phone: ""
+            },
+            address: {
+                street: "",
+                city: "",
+                state: "",
+                country: "",
+                zipCode: ""
+            },
             hotelType: "Normal",
             handlingType: "Rooms",
         },
@@ -52,8 +74,27 @@ const HotelOnboarding: React.FC = () => {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
+            // 1. Create Organization
+            const orgSlug = values.slug + '-org'; // Simple slug generation
+            const { data: org, error: orgError } = await authClient.organization.create({
+                name: values.name,
+                slug: orgSlug
+            });
+
+            if (orgError) {
+                console.error("Error creating organization:", orgError);
+                alert(`Failed to create organization: ${orgError.message}`);
+                return;
+            }
+
+            // 2. Create Hotel linked to Organization
             // Add default planId for now (should be selected from UI later)
-            const data = { ...values, planId: '6566aebc9305139772d2d2d2' }; // Dummy ID
+            const data = {
+                ...values,
+                organizationId: org?.id,
+                planId: '6566aebc9305139772d2d2d2' // Dummy ID
+            };
+
             const hotel = await createHotel(data);
             console.log('Hotel created:', hotel);
             alert('Hotel created successfully!');
@@ -65,7 +106,7 @@ const HotelOnboarding: React.FC = () => {
     }
 
     return (
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-2xl mx-auto my-8">
             <CardHeader>
                 <CardTitle>Onboard New Hotel</CardTitle>
             </CardHeader>
@@ -130,20 +171,111 @@ const HotelOnboarding: React.FC = () => {
                                     </FormItem>
                                 )}
                             />
+                        </div>
 
+                        <div className="space-y-4">
+                            <h3 className="font-medium">Authorized Signatory</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="authorizedSignatory.name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="John Doe" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="authorizedSignatory.phone"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Phone</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="+91 9876543210" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="font-medium">Address</h3>
                             <FormField
                                 control={form.control}
-                                name="authorizedSignatory"
+                                name="address.street"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Authorized Signatory</FormLabel>
+                                        <FormLabel>Street</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="John Doe" {...field} />
+                                            <Input placeholder="123 Main St" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="address.city"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>City</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Metropolis" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="address.state"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>State</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="NY" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="address.country"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Country</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="USA" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="address.zipCode"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Zip Code</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="10001" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

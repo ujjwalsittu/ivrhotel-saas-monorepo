@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Booking } from '../models/Booking';
 import { Guest } from '../models/Guest';
 import { Room } from '../models/Room';
+import { RoomType } from '../models/RoomType';
 import { z } from 'zod';
 
 const createBookingSchema = z.object({
@@ -16,12 +17,38 @@ const createBookingSchema = z.object({
     checkOutDate: z.string().datetime(),
     totalAmount: z.number(),
     paidAmount: z.number().optional(),
+    notes: z.string().optional(),
 });
 
 export const createBooking = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
         const validatedData = createBookingSchema.parse(req.body);
+
+        // Validate Room Type
+        const roomType = await RoomType.findOne({ _id: validatedData.roomTypeId, hotelId });
+        if (!roomType) {
+            return res.status(400).json({ message: 'Invalid Room Type' });
+        }
+
+        // Check Availability (Basic: Total Rooms of Type - Overlapping Bookings of Type > 0)
+        // This is a simplified check. A real system needs a more robust availability engine.
+        const totalRooms = await Room.countDocuments({ hotelId, roomTypeId: validatedData.roomTypeId, status: { $ne: 'OUT_OF_ORDER' } });
+
+        const overlappingBookings = await Booking.countDocuments({
+            hotelId,
+            roomTypeId: validatedData.roomTypeId,
+            status: { $in: ['CONFIRMED', 'CHECKED_IN'] },
+            $or: [
+                { checkInDate: { $lt: new Date(validatedData.checkOutDate), $gte: new Date(validatedData.checkInDate) } },
+                { checkOutDate: { $gt: new Date(validatedData.checkInDate), $lte: new Date(validatedData.checkOutDate) } },
+                { checkInDate: { $lte: new Date(validatedData.checkInDate) }, checkOutDate: { $gte: new Date(validatedData.checkOutDate) } }
+            ]
+        });
+
+        if (overlappingBookings >= totalRooms) {
+            return res.status(400).json({ message: 'No rooms available for this room type on selected dates' });
+        }
 
         // 1. Find or Create Guest
         let guest = await Guest.findOne({
@@ -36,7 +63,7 @@ export const createBooking = async (req: Request, res: Response) => {
             });
             await guest.save();
         } else {
-            // Update guest info if provided? For now, let's keep existing.
+            // Optional: Update guest details if provided
         }
 
         // 2. Create Booking
@@ -49,6 +76,7 @@ export const createBooking = async (req: Request, res: Response) => {
             totalAmount: validatedData.totalAmount,
             paidAmount: validatedData.paidAmount || 0,
             status: 'CONFIRMED',
+            notes: validatedData.notes
         });
 
         await booking.save();
@@ -135,6 +163,27 @@ export const deleteBooking = async (req: Request, res: Response) => {
         res.json({ message: 'Booking deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting booking', error });
+    }
+};
+
+export const cancelBooking = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findById(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        booking.status = 'CANCELLED';
+        await booking.save();
+
+        // If room was assigned, we might want to free it up or mark it dirty? 
+        // Usually cancelled bookings release the room availability immediately.
+        // Since we check availability dynamically, changing status to CANCELLED is enough.
+
+        res.json(booking);
+    } catch (error) {
+        res.status(500).json({ message: 'Error cancelling booking', error });
     }
 };
 

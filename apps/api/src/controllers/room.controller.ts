@@ -34,21 +34,39 @@ const createRoomSchema = z.object({
 // Floor Controllers
 export const createFloor = async (req: Request, res: Response) => {
     try {
-        const { hotelId } = req.params; // Assuming hotelId is passed in params or extracted from auth token later
+        const { hotelId } = req.params;
         const validatedData = createFloorSchema.parse(req.body);
 
         const floor = new Floor({ ...validatedData, hotelId });
         await floor.save();
         res.status(201).json(floor);
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
         res.status(500).json({ message: 'Error creating floor', error });
+    }
+};
+
+export const createFloorsBulk = async (req: Request, res: Response) => {
+    try {
+        const { hotelId } = req.params;
+        const floorsData = z.array(createFloorSchema).parse(req.body);
+
+        const floors = await Floor.insertMany(floorsData.map(f => ({ ...f, hotelId })));
+        res.status(201).json(floors);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
+        res.status(500).json({ message: 'Error creating floors', error });
     }
 };
 
 export const getFloors = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
-        const { search, page = 1, limit = 10 } = req.query;
+        const { search, page = 1, limit = 100 } = req.query; // Increased limit for floors
 
         const query: any = { hotelId };
         if (search) {
@@ -58,6 +76,7 @@ export const getFloors = async (req: Request, res: Response) => {
         const skip = (Number(page) - 1) * Number(limit);
 
         const floors = await Floor.find(query)
+            .sort({ number: 1 }) // Sort by floor number
             .skip(skip)
             .limit(Number(limit));
 
@@ -115,6 +134,9 @@ export const createRoomType = async (req: Request, res: Response) => {
         await roomType.save();
         res.status(201).json(roomType);
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
         res.status(500).json({ message: 'Error creating room type', error });
     }
 };
@@ -189,18 +211,37 @@ export const createRoom = async (req: Request, res: Response) => {
         await room.save();
         res.status(201).json(room);
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
         res.status(500).json({ message: 'Error creating room', error });
+    }
+};
+
+export const createRoomsBulk = async (req: Request, res: Response) => {
+    try {
+        const { hotelId } = req.params;
+        const roomsData = z.array(createRoomSchema).parse(req.body);
+
+        const rooms = await Room.insertMany(roomsData.map(r => ({ ...r, hotelId })));
+        res.status(201).json(rooms);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
+        res.status(500).json({ message: 'Error creating rooms', error });
     }
 };
 
 export const getRooms = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
-        const { status, roomTypeId, search, page = 1, limit = 10 } = req.query;
+        const { status, roomTypeId, floorId, search, page = 1, limit = 50 } = req.query;
 
         const query: any = { hotelId };
         if (status) query.status = status;
         if (roomTypeId) query.roomTypeId = roomTypeId;
+        if (floorId) query.floorId = floorId;
         if (search) {
             query.number = { $regex: search, $options: 'i' };
         }
@@ -210,6 +251,7 @@ export const getRooms = async (req: Request, res: Response) => {
         const rooms = await Room.find(query)
             .populate('floorId')
             .populate('roomTypeId')
+            .sort({ number: 1 })
             .skip(skip)
             .limit(Number(limit));
 

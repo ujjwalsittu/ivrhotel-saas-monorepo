@@ -138,12 +138,26 @@ export const submitOnboarding = async (req: Request, res: Response) => {
         const { hotelId } = req.params;
 
         const hotel = await Hotel.findById(hotelId);
-        if (!hotel) {
-            return res.status(404).json({ message: 'Hotel not found' });
-        }
+        if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
 
         // Validate required fields are filled
-        // TODO: Add comprehensive validation
+        const requiredFields = ['name', 'contactNumber', 'email', 'address.street', 'address.city', 'address.state', 'address.zipCode', 'authorizedSignatory.name', 'authorizedSignatory.phone'];
+        const missingFields = [];
+
+        // Simple check for nested fields
+        if (!hotel.name) missingFields.push('name');
+        if (!hotel.contactNumber) missingFields.push('contactNumber');
+        if (!hotel.email) missingFields.push('email');
+        if (!hotel.address?.street) missingFields.push('address.street');
+        if (!hotel.address?.city) missingFields.push('address.city');
+        if (!hotel.address?.state) missingFields.push('address.state');
+        if (!hotel.address?.zipCode) missingFields.push('address.zipCode');
+        if (!hotel.authorizedSignatory?.name) missingFields.push('authorizedSignatory.name');
+        if (!hotel.authorizedSignatory?.phone) missingFields.push('authorizedSignatory.phone');
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({ message: 'Missing required fields', missingFields });
+        }
 
         hotel.onboardingStatus = 'submitted';
         hotel.submittedAt = new Date();

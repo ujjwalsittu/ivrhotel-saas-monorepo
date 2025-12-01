@@ -12,6 +12,7 @@ import HotelAdminLayout from './layouts/HotelAdminLayout';
 import FloorManagement from './pages/hotel-admin/FloorManagement';
 import RoomTypeManagement from './pages/hotel-admin/RoomTypeManagement';
 import RoomManagement from './pages/hotel-admin/RoomManagement';
+import RoomRack from './pages/hotel-admin/RoomRack';
 import StaffManagement from './pages/hotel-admin/StaffManagement';
 import BookingManagement from './pages/hotel-admin/BookingManagement';
 import HotelDashboard from './pages/hotel-admin/Dashboard';
@@ -65,6 +66,7 @@ function App() {
           <Route path="floors" element={<FloorManagement />} />
           <Route path="room-types" element={<RoomTypeManagement />} />
           <Route path="rooms" element={<RoomManagement />} />
+          <Route path="room-rack" element={<RoomRack />} />
           <Route path="staff" element={<StaffManagement />} />
           <Route path="bookings" element={<BookingManagement />} />
 
