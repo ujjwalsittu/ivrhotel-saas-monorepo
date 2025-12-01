@@ -7,5 +7,14 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    user: {
+        additionalFields: {
+            role: {
+                type: "string",
+                required: true,
+                defaultValue: "GUEST", // Default role
+            },
+        },
+    },
     // Add other providers here
 });

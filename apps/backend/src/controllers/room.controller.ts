@@ -48,8 +48,30 @@ export const createFloor = async (req: Request, res: Response) => {
 export const getFloors = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
-        const floors = await Floor.find({ hotelId });
-        res.json(floors);
+        const { search, page = 1, limit = 10 } = req.query;
+
+        const query: any = { hotelId };
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const floors = await Floor.find(query)
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await Floor.countDocuments(query);
+
+        res.json({
+            data: floors,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit))
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching floors', error });
     }
@@ -100,8 +122,30 @@ export const createRoomType = async (req: Request, res: Response) => {
 export const getRoomTypes = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
-        const roomTypes = await RoomType.find({ hotelId });
-        res.json(roomTypes);
+        const { search, page = 1, limit = 10 } = req.query;
+
+        const query: any = { hotelId };
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const roomTypes = await RoomType.find(query)
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await RoomType.countDocuments(query);
+
+        res.json({
+            data: roomTypes,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit))
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching room types', error });
     }
@@ -152,10 +196,34 @@ export const createRoom = async (req: Request, res: Response) => {
 export const getRooms = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
-        const rooms = await Room.find({ hotelId })
+        const { status, roomTypeId, search, page = 1, limit = 10 } = req.query;
+
+        const query: any = { hotelId };
+        if (status) query.status = status;
+        if (roomTypeId) query.roomTypeId = roomTypeId;
+        if (search) {
+            query.number = { $regex: search, $options: 'i' };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const rooms = await Room.find(query)
             .populate('floorId')
-            .populate('roomTypeId');
-        res.json(rooms);
+            .populate('roomTypeId')
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await Room.countDocuments(query);
+
+        res.json({
+            data: rooms,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit))
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching rooms', error });
     }
@@ -186,5 +254,61 @@ export const deleteRoom = async (req: Request, res: Response) => {
         res.json({ message: 'Room deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting room', error });
+    }
+};
+export const getAvailableRooms = async (req: Request, res: Response) => {
+    try {
+        const { hotelId } = req.params;
+        const { checkInDate, checkOutDate, roomTypeId } = req.query;
+
+        if (!checkInDate || !checkOutDate) {
+            return res.status(400).json({ message: 'Check-in and check-out dates are required' });
+        }
+
+        const start = new Date(checkInDate as string);
+        const end = new Date(checkOutDate as string);
+
+        // Find bookings that overlap with the requested dates
+        // Overlap: (StartA <= EndB) and (EndA >= StartB)
+        // We want to find bookings where checkInDate < end AND checkOutDate > start
+        // Note: We use < and > because if one ends exactly when another starts, it's usually fine (check-out 11am, check-in 2pm)
+        // But for simplicity in this system, let's assume strict overlap for now.
+
+        // Actually, standard hotel logic:
+        // Booking A: Jan 1 - Jan 3 (Nights of Jan 1, Jan 2). Checkout Jan 3.
+        // Booking B: Jan 3 - Jan 5. Checkin Jan 3.
+        // These do NOT overlap in terms of nights.
+        // So Overlap if: Booking.checkIn < Request.checkOut AND Booking.checkOut > Request.checkIn
+
+        const conflictingBookings = await import('../models/Booking').then(m => m.Booking.find({
+            hotelId,
+            status: { $in: ['CONFIRMED', 'CHECKED_IN'] },
+            checkInDate: { $lt: end },
+            checkOutDate: { $gt: start }
+        }).select('roomId'));
+
+        const occupiedRoomIds = conflictingBookings.map(b => b.roomId).filter(id => id);
+
+        const query: any = {
+            hotelId,
+            _id: { $nin: occupiedRoomIds },
+            status: 'CLEAN' // Only show clean rooms? Or maybe dirty ones too if they can be cleaned? Let's show CLEAN for now for check-in.
+            // Actually for "Availability" in general (future bookings), status doesn't matter (it will be cleaned).
+            // But for "Check-In Now", we probably want CLEAN rooms.
+            // The prompt implies "finding available rooms" for check-in.
+            // Let's stick to the plan: "Returns list of rooms that are free from overlapping bookings".
+            // If it's for immediate check-in, the frontend can filter by status or we can add a param.
+            // Let's just return all rooms not booked, and let frontend decide if they want to check-in to a dirty room (maybe after cleaning).
+        };
+
+        if (roomTypeId) {
+            query.roomTypeId = roomTypeId;
+        }
+
+        const rooms = await Room.find(query).populate('roomTypeId');
+
+        res.json(rooms);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching available rooms', error });
     }
 };

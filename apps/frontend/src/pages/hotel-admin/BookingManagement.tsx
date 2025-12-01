@@ -17,6 +17,14 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
     guest: z.object({
@@ -30,12 +38,18 @@ const formSchema = z.object({
     totalAmount: z.coerce.number().min(0),
 });
 
-type BookingFormValues = z.infer<typeof formSchema>;
+
 
 const BookingManagement: React.FC = () => {
     const { hotelId } = useParams();
     const [bookings, setBookings] = useState<any[]>([]);
     const [roomTypes, setRoomTypes] = useState<any[]>([]);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Check-in State
+    const [checkInBookingId, setCheckInBookingId] = useState<string | null>(null);
+    const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+    const [selectedRoomId, setSelectedRoomId] = useState<string>("");
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -60,7 +74,7 @@ const BookingManagement: React.FC = () => {
     const fetchBookings = async () => {
         try {
             const response = await api.get(`/hotels/${hotelId}/bookings`);
-            setBookings(response.data);
+            setBookings(response.data.data || response.data);
         } catch (error) {
             console.error('Error fetching bookings:', error);
         }
@@ -69,13 +83,13 @@ const BookingManagement: React.FC = () => {
     const fetchRoomTypes = async () => {
         try {
             const response = await api.get(`/hotels/${hotelId}/room-types`);
-            setRoomTypes(response.data);
+            setRoomTypes(response.data.data || response.data);
         } catch (error) {
             console.error('Error fetching room types:', error);
         }
     };
 
-    const onSubmit = async (values: BookingFormValues) => {
+    const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             // Convert dates to ISO string for backend
             const payload = {
@@ -83,20 +97,105 @@ const BookingManagement: React.FC = () => {
                 checkInDate: new Date(values.checkInDate).toISOString(),
                 checkOutDate: new Date(values.checkOutDate).toISOString(),
             };
-            await api.post(`/hotels/${hotelId}/bookings`, payload);
+
+            if (editingId) {
+                await api.put(`/hotels/${hotelId}/bookings/${editingId}`, payload);
+            } else {
+                await api.post(`/hotels/${hotelId}/bookings`, payload);
+            }
             fetchBookings();
-            form.reset();
+            form.reset({
+                guest: { name: "", email: "", phone: "" },
+                roomTypeId: "",
+                checkInDate: "",
+                checkOutDate: "",
+                totalAmount: 0,
+            });
+            setEditingId(null);
         } catch (error) {
-            console.error('Error creating booking:', error);
-            alert('Failed to create booking');
+            console.error('Error saving booking:', error);
+            alert('Failed to save booking');
         }
     };
 
-    const handleCheckIn = async () => {
-        // For simplicity, we'll just ask for a room ID via prompt or auto-assign in a real app.
-        // Here, let's just assume we need to build a check-in modal.
-        // For this MVP step, I'll just log it as "Coming Soon" or implement a simple prompt if I had room list.
-        alert("Check-in UI coming in next step (needs room selection)");
+    const handleEdit = (booking: any) => {
+        setEditingId(booking._id);
+        form.reset({
+            guest: {
+                name: booking.guestId?.name || "",
+                email: booking.guestId?.email || "",
+                phone: booking.guestId?.phone || "",
+            },
+            roomTypeId: booking.roomTypeId?._id || booking.roomTypeId,
+            checkInDate: booking.checkInDate ? new Date(booking.checkInDate).toISOString().split('T')[0] : "",
+            checkOutDate: booking.checkOutDate ? new Date(booking.checkOutDate).toISOString().split('T')[0] : "",
+            totalAmount: booking.totalAmount,
+        });
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this booking?')) return;
+        try {
+            await api.delete(`/hotels/${hotelId}/bookings/${id}`);
+            fetchBookings();
+        } catch (error) {
+            console.error('Error deleting booking:', error);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        form.reset({
+            guest: { name: "", email: "", phone: "" },
+            roomTypeId: "",
+            checkInDate: "",
+            checkOutDate: "",
+            totalAmount: 0,
+        });
+    };
+
+    const handleCheckIn = async (booking: any) => {
+        setCheckInBookingId(booking._id);
+        setSelectedRoomId("");
+        try {
+            // Fetch available rooms for the booking dates
+            const response = await api.get(`/hotels/${hotelId}/available-rooms`, {
+                params: {
+                    checkInDate: booking.checkInDate,
+                    checkOutDate: booking.checkOutDate,
+                    roomTypeId: booking.roomTypeId?._id || booking.roomTypeId
+                }
+            });
+            setAvailableRooms(response.data);
+        } catch (error) {
+            console.error('Error fetching available rooms:', error);
+            alert('Failed to fetch available rooms');
+        }
+    };
+
+    const confirmCheckIn = async () => {
+        if (!checkInBookingId || !selectedRoomId) return;
+        try {
+            await api.post(`/hotels/${hotelId}/bookings/${checkInBookingId}/check-in`, { roomId: selectedRoomId });
+            fetchBookings();
+            setCheckInBookingId(null);
+            setAvailableRooms([]);
+            setSelectedRoomId("");
+        } catch (error) {
+            console.error('Error checking in:', error);
+            alert('Failed to check in');
+        }
+    };
+
+    const handleCheckOut = async (booking: any) => {
+        if (!confirm(`Are you sure you want to check out ${booking.guestId?.name}?`)) return;
+        try {
+            await api.post(`/hotels/${hotelId}/bookings/${booking._id}/check-out`);
+            fetchBookings();
+        } catch (error) {
+            console.error('Error checking out:', error);
+            alert('Failed to check out');
+        }
     };
 
     return (
@@ -163,7 +262,7 @@ const BookingManagement: React.FC = () => {
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    {roomTypes.map((type) => (
+                                                    {roomTypes.map((type: any) => (
                                                         <SelectItem key={type._id} value={type._id}>
                                                             {type.name}
                                                         </SelectItem>
@@ -216,7 +315,12 @@ const BookingManagement: React.FC = () => {
                                     )}
                                 />
                             </div>
-                            <Button type="submit">Create Booking</Button>
+                            <div className="flex gap-2">
+                                <Button type="submit">{editingId ? 'Update' : 'Create'} Booking</Button>
+                                {editingId && (
+                                    <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                                )}
+                            </div>
                         </form>
                     </Form>
                 </CardContent>
@@ -238,7 +342,7 @@ const BookingManagement: React.FC = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {bookings.map((booking) => (
+                            {bookings.map((booking: any) => (
                                 <TableRow key={booking._id}>
                                     <TableCell>
                                         <div>{booking.guestId?.name}</div>
@@ -248,9 +352,16 @@ const BookingManagement: React.FC = () => {
                                     <TableCell>{new Date(booking.checkInDate).toLocaleDateString()}</TableCell>
                                     <TableCell>{booking.status}</TableCell>
                                     <TableCell>
-                                        {booking.status === 'CONFIRMED' && (
-                                            <Button size="sm" onClick={() => handleCheckIn()}>Check In</Button>
-                                        )}
+                                        <div className="flex gap-2">
+                                            {booking.status === 'CONFIRMED' && (
+                                                <Button size="sm" onClick={() => handleCheckIn(booking)}>Check In</Button>
+                                            )}
+                                            {booking.status === 'CHECKED_IN' && (
+                                                <Button size="sm" variant="secondary" onClick={() => handleCheckOut(booking)}>Check Out</Button>
+                                            )}
+                                            <Button variant="outline" size="sm" onClick={() => handleEdit(booking)}>Edit</Button>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(booking._id)}>Delete</Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -258,7 +369,41 @@ const BookingManagement: React.FC = () => {
                     </Table>
                 </CardContent>
             </Card>
-        </div>
+
+
+            <Dialog open={!!checkInBookingId} onOpenChange={(open) => !open && setCheckInBookingId(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Check In Guest</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Select Room</Label>
+                            <Select onValueChange={setSelectedRoomId} value={selectedRoomId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a clean room" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableRooms.length === 0 ? (
+                                        <SelectItem value="none" disabled>No clean rooms available</SelectItem>
+                                    ) : (
+                                        availableRooms.map((room) => (
+                                            <SelectItem key={room._id} value={room._id}>
+                                                {room.number} ({room.floorId?.name})
+                                            </SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setCheckInBookingId(null)}>Cancel</Button>
+                        <Button onClick={confirmCheckIn} disabled={!selectedRoomId}>Confirm Check In</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     );
 };
 

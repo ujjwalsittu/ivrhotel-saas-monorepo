@@ -45,8 +45,34 @@ export const createStaff = async (req: Request, res: Response) => {
 export const getStaff = async (req: Request, res: Response) => {
     try {
         const { hotelId } = req.params;
-        const staff = await User.find({ hotelId }).select('-password');
-        res.json(staff);
+        const { search, page = 1, limit = 10 } = req.query;
+
+        const query: any = { hotelId };
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const staff = await User.find(query)
+            .select('-password')
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await User.countDocuments(query);
+
+        res.json({
+            data: staff,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit))
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching staff', error });
     }

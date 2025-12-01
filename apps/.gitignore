@@ -153,6 +153,6 @@ localhost-cert/
 # AI / MODEL CACHE (if used)
 ##############################################
 
-models/
-models-cache/
+# models/
+# models-cache/
 

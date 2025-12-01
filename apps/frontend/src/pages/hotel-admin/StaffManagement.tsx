@@ -27,10 +27,25 @@ const formSchema = z.object({
 
 
 
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+
 const StaffManagement: React.FC = () => {
     const { hotelId } = useParams();
     const [staffList, setStaffList] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Pagination & Search State
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -43,27 +58,35 @@ const StaffManagement: React.FC = () => {
     });
 
     useEffect(() => {
-        fetchStaff();
-    }, [hotelId]);
+        const delayDebounceFn = setTimeout(() => {
+            fetchStaff();
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [hotelId, search, page]);
 
     const fetchStaff = async () => {
+        setIsLoading(true);
         try {
-            const response = await api.get(`/hotels/${hotelId}/staff`);
-            setStaffList(response.data);
+            const response = await api.get(`/hotels/${hotelId}/staff`, {
+                params: { search, page, limit: 10 }
+            });
+            if (response.data.data) {
+                setStaffList(response.data.data);
+                setTotalPages(response.data.pagination.totalPages);
+            } else {
+                setStaffList(response.data);
+            }
         } catch (error) {
             console.error('Error fetching staff:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             if (editingId) {
-                // For update, password is optional if not changed. 
-                // But our schema requires it. We might need to adjust schema or handle it.
-                // For now, let's assume if password is empty string, we don't send it, 
-                // but zod schema requires min(6).
-                // Let's just send it for now, user has to re-enter or we change schema dynamically.
-                // To keep it simple for MVP, we'll require password for update too or user enters a new one.
                 await api.put(`/hotels/${hotelId}/staff/${editingId}`, values);
             } else {
                 await api.post(`/hotels/${hotelId}/staff`, values);
@@ -189,8 +212,15 @@ const StaffManagement: React.FC = () => {
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Staff List</CardTitle>
+                    <div className="w-1/3">
+                        <Input
+                            placeholder="Search staff..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -203,21 +233,63 @@ const StaffManagement: React.FC = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {staffList.map((staff: any) => (
-                                <TableRow key={staff._id}>
-                                    <TableCell>{staff.name}</TableCell>
-                                    <TableCell>{staff.email}</TableCell>
-                                    <TableCell>{staff.role}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => handleEdit(staff)}>Edit</Button>
-                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(staff._id)}>Delete</Button>
-                                        </div>
-                                    </TableCell>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
                                 </TableRow>
-                            ))}
+                            ) : staffList.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center">No staff found</TableCell>
+                                </TableRow>
+                            ) : (
+                                staffList.map((staff: any) => (
+                                    <TableRow key={staff._id}>
+                                        <TableCell>{staff.name}</TableCell>
+                                        <TableCell>{staff.email}</TableCell>
+                                        <TableCell>{staff.role}</TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" onClick={() => handleEdit(staff)}>Edit</Button>
+                                                <Button variant="destructive" size="sm" onClick={() => handleDelete(staff._id)}>Delete</Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
+
+                    {totalPages > 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                                            className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                        />
+                                    </PaginationItem>
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <PaginationItem key={i}>
+                                            <PaginationLink
+                                                isActive={page === i + 1}
+                                                onClick={() => setPage(i + 1)}
+                                                className="cursor-pointer"
+                                            >
+                                                {i + 1}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                            className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

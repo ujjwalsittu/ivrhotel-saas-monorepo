@@ -26,12 +26,27 @@ const formSchema = z.object({
 
 
 
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+
 const RoomManagement: React.FC = () => {
     const { hotelId } = useParams();
     const [rooms, setRooms] = useState<any[]>([]);
     const [floors, setFloors] = useState<any[]>([]);
     const [roomTypes, setRoomTypes] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Pagination & Search State
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -43,24 +58,41 @@ const RoomManagement: React.FC = () => {
     });
 
     useEffect(() => {
-        fetchRooms();
         fetchFloors();
         fetchRoomTypes();
     }, [hotelId]);
 
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchRooms();
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [hotelId, search, page]);
+
     const fetchRooms = async () => {
+        setIsLoading(true);
         try {
-            const response = await api.get(`/hotels/${hotelId}/rooms`);
-            setRooms(response.data);
+            const response = await api.get(`/hotels/${hotelId}/rooms`, {
+                params: { search, page, limit: 10 }
+            });
+            if (response.data.data) {
+                setRooms(response.data.data);
+                setTotalPages(response.data.pagination.totalPages);
+            } else {
+                setRooms(response.data);
+            }
         } catch (error) {
             console.error('Error fetching rooms:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const fetchFloors = async () => {
         try {
             const response = await api.get(`/hotels/${hotelId}/floors`);
-            setFloors(response.data);
+            setFloors(response.data.data || response.data);
         } catch (error) {
             console.error('Error fetching floors:', error);
         }
@@ -69,7 +101,7 @@ const RoomManagement: React.FC = () => {
     const fetchRoomTypes = async () => {
         try {
             const response = await api.get(`/hotels/${hotelId}/room-types`);
-            setRoomTypes(response.data);
+            setRoomTypes(response.data.data || response.data);
         } catch (error) {
             console.error('Error fetching room types:', error);
         }
@@ -196,8 +228,15 @@ const RoomManagement: React.FC = () => {
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Rooms</CardTitle>
+                    <div className="w-1/3">
+                        <Input
+                            placeholder="Search rooms..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -211,22 +250,64 @@ const RoomManagement: React.FC = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {rooms.map((room: any) => (
-                                <TableRow key={room._id}>
-                                    <TableCell>{room.number}</TableCell>
-                                    <TableCell>{room.floorId?.name}</TableCell>
-                                    <TableCell>{room.roomTypeId?.name}</TableCell>
-                                    <TableCell>{room.status}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => handleEdit(room)}>Edit</Button>
-                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(room._id)}>Delete</Button>
-                                        </div>
-                                    </TableCell>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
                                 </TableRow>
-                            ))}
+                            ) : rooms.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center">No rooms found</TableCell>
+                                </TableRow>
+                            ) : (
+                                rooms.map((room: any) => (
+                                    <TableRow key={room._id}>
+                                        <TableCell>{room.number}</TableCell>
+                                        <TableCell>{room.floorId?.name}</TableCell>
+                                        <TableCell>{room.roomTypeId?.name}</TableCell>
+                                        <TableCell>{room.status}</TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" onClick={() => handleEdit(room)}>Edit</Button>
+                                                <Button variant="destructive" size="sm" onClick={() => handleDelete(room._id)}>Delete</Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
+
+                    {totalPages > 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                                            className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                        />
+                                    </PaginationItem>
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <PaginationItem key={i}>
+                                            <PaginationLink
+                                                isActive={page === i + 1}
+                                                onClick={() => setPage(i + 1)}
+                                                className="cursor-pointer"
+                                            >
+                                                {i + 1}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                            className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

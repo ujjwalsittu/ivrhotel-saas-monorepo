@@ -23,10 +23,25 @@ const formSchema = z.object({
     block: z.string().optional(),
 });
 
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+
 const FloorManagement: React.FC = () => {
     const { hotelId } = useParams();
     const [floors, setFloors] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Pagination & Search State
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -38,15 +53,29 @@ const FloorManagement: React.FC = () => {
     });
 
     useEffect(() => {
-        fetchFloors();
-    }, [hotelId]);
+        const delayDebounceFn = setTimeout(() => {
+            fetchFloors();
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [hotelId, search, page]);
 
     const fetchFloors = async () => {
+        setIsLoading(true);
         try {
-            const response = await api.get(`/hotels/${hotelId}/floors`);
-            setFloors(response.data);
+            const response = await api.get(`/hotels/${hotelId}/floors`, {
+                params: { search, page, limit: 10 }
+            });
+            if (response.data.data) {
+                setFloors(response.data.data);
+                setTotalPages(response.data.pagination.totalPages);
+            } else {
+                setFloors(response.data); // Fallback
+            }
         } catch (error) {
             console.error('Error fetching floors:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -149,8 +178,15 @@ const FloorManagement: React.FC = () => {
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Floors</CardTitle>
+                    <div className="w-1/3">
+                        <Input
+                            placeholder="Search floors..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -163,21 +199,63 @@ const FloorManagement: React.FC = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {floors.map((floor: any) => (
-                                <TableRow key={floor._id}>
-                                    <TableCell>{floor.number}</TableCell>
-                                    <TableCell>{floor.name}</TableCell>
-                                    <TableCell>{floor.block || '-'}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => handleEdit(floor)}>Edit</Button>
-                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(floor._id)}>Delete</Button>
-                                        </div>
-                                    </TableCell>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
                                 </TableRow>
-                            ))}
+                            ) : floors.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center">No floors found</TableCell>
+                                </TableRow>
+                            ) : (
+                                floors.map((floor: any) => (
+                                    <TableRow key={floor._id}>
+                                        <TableCell>{floor.number}</TableCell>
+                                        <TableCell>{floor.name}</TableCell>
+                                        <TableCell>{floor.block || '-'}</TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" onClick={() => handleEdit(floor)}>Edit</Button>
+                                                <Button variant="destructive" size="sm" onClick={() => handleDelete(floor._id)}>Delete</Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
+
+                    {totalPages > 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                                            className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                        />
+                                    </PaginationItem>
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <PaginationItem key={i}>
+                                            <PaginationLink
+                                                isActive={page === i + 1}
+                                                onClick={() => setPage(i + 1)}
+                                                className="cursor-pointer"
+                                            >
+                                                {i + 1}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                            className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
