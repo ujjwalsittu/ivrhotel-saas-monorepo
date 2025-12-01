@@ -1,0 +1,10 @@
+{
+	"dependencies": {
+		"better-auth": "^1.4.4",
+		"mongodb": "^7.0.0"
+	},
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	]
+}
