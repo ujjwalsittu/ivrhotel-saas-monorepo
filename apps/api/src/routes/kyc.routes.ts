@@ -1,29 +1,21 @@
 import { Router } from 'express';
 import {
-    generateKYCLink,
     getKYCSession,
-    submitIdentity,
-    verifyDigilocker,
+    updateIdentity,
     uploadDocument,
     uploadSelfie,
     completeKYC,
-    getKYCStatus
+    digilockerVerify
 } from '../controllers/kyc.controller';
-import { requireAuth } from '../middleware/auth';
-import { upload } from '../services/upload.service';
 
 const router = Router();
 
-// Public routes (token-based auth - no requireAuth middleware)
+// Public routes (protected by token in URL)
 router.get('/:token', getKYCSession);
-router.put('/:token/identity', submitIdentity);
-router.post('/:token/digilocker', verifyDigilocker);
-router.post('/:token/upload-document', upload.single('file'), uploadDocument);
-router.post('/:token/upload-selfie', upload.single('file'), uploadSelfie);
+router.put('/:token/identity', updateIdentity);
+router.post('/:token/upload-document', uploadDocument); // Add multer middleware here in real app
+router.post('/:token/upload-selfie', uploadSelfie);     // Add multer middleware here in real app
 router.post('/:token/complete', completeKYC);
-
-// Protected routes (hotel staff)
-router.post('/bookings/:bookingId/generate', requireAuth, generateKYCLink);
-router.get('/bookings/:bookingId/status', requireAuth, getKYCStatus);
+router.post('/:token/digilocker', digilockerVerify);
 
 export default router;

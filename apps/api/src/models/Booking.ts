@@ -12,6 +12,8 @@ export interface IBooking extends Document {
     checkOutDate: Date;
     status: 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'NO_SHOW';
     paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID' | 'REFUNDED';
+    kycStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
+    kycToken?: string;
     totalAmount: number;
     paidAmount: number;
     notes?: string;
@@ -40,6 +42,12 @@ const BookingSchema: Schema = new Schema(
             enum: ['PENDING', 'PARTIAL', 'PAID', 'REFUNDED'],
             default: 'PENDING',
         },
+        kycStatus: {
+            type: String,
+            enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'VERIFIED', 'REJECTED'],
+            default: 'PENDING',
+        },
+        kycToken: { type: String },
         totalAmount: { type: Number, required: true },
         paidAmount: { type: Number, default: 0 },
         notes: { type: String },

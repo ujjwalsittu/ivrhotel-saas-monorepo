@@ -11,6 +11,8 @@ export interface IGuest extends Document {
         number: string;
         url?: string; // URL to uploaded document
     };
+    selfieUrl?: string;
+    kycStatus?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -27,6 +29,8 @@ const GuestSchema: Schema = new Schema(
             number: { type: String },
             url: { type: String },
         },
+        selfieUrl: { type: String },
+        kycStatus: { type: String },
     },
     { timestamps: true }
 );

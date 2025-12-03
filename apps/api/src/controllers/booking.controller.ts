@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 import { Booking } from '../models/Booking';
 import { Guest } from '../models/Guest';
 import { Room } from '../models/Room';
 import { RoomType } from '../models/RoomType';
+import { BookingActivity } from '../models/BookingActivity';
 import { z } from 'zod';
 
 const createBookingSchema = z.object({
@@ -19,6 +21,20 @@ const createBookingSchema = z.object({
     paidAmount: z.number().optional(),
     notes: z.string().optional(),
 });
+
+const logActivity = async (bookingId: string, hotelId: string, action: string, details?: any, userId?: string) => {
+    try {
+        await BookingActivity.create({
+            bookingId,
+            hotelId,
+            userId, // In a real app, we'd get this from the request context (req.user)
+            action,
+            details
+        });
+    } catch (error) {
+        console.error('Failed to log booking activity:', error);
+    }
+};
 
 export const createBooking = async (req: Request, res: Response) => {
     try {
@@ -80,6 +96,8 @@ export const createBooking = async (req: Request, res: Response) => {
         });
 
         await booking.save();
+
+        await logActivity(booking._id.toString(), hotelId, 'CREATED', { totalAmount: booking.totalAmount }, (req as any).user?.id);
 
         res.status(201).json(booking);
     } catch (error) {
@@ -148,6 +166,8 @@ export const updateBooking = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
         res.json(booking);
+
+        await logActivity(id, booking.hotelId.toString(), 'UPDATED', validatedData, (req as any).user?.id);
     } catch (error) {
         res.status(500).json({ message: 'Error updating booking', error });
     }
@@ -176,6 +196,8 @@ export const cancelBooking = async (req: Request, res: Response) => {
 
         booking.status = 'CANCELLED';
         await booking.save();
+
+        await logActivity(id, booking.hotelId.toString(), 'CANCELLED', {}, (req as any).user?.id);
 
         // If room was assigned, we might want to free it up or mark it dirty? 
         // Usually cancelled bookings release the room availability immediately.
@@ -240,6 +262,8 @@ export const checkIn = async (req: Request, res: Response) => {
         booking.checkInDate = new Date(); // Update actual check-in time
         await booking.save();
 
+        await logActivity(id, booking.hotelId.toString(), 'CHECKED_IN', { roomId }, (req as any).user?.id);
+
         // Update Room Status
         await Room.findByIdAndUpdate(roomId, { status: 'OCCUPIED' });
 
@@ -262,6 +286,8 @@ export const checkOut = async (req: Request, res: Response) => {
         booking.checkOutDate = new Date(); // Update actual check-out time
         await booking.save();
 
+        await logActivity(id, booking.hotelId.toString(), 'CHECKED_OUT', {}, (req as any).user?.id);
+
         // Update Room Status
         if (booking.roomId) {
             await Room.findByIdAndUpdate(booking.roomId, { status: 'DIRTY' }); // Needs cleaning
@@ -270,5 +296,41 @@ export const checkOut = async (req: Request, res: Response) => {
         res.json(booking);
     } catch (error) {
         res.status(500).json({ message: 'Error checking out', error });
+    }
+};
+
+export const getBookingActivities = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const activities = await BookingActivity.find({ bookingId: id })
+            .sort({ timestamp: -1 })
+            .populate('userId', 'name email'); // Assuming User model has name/email
+        res.json(activities);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching booking activities', error });
+    }
+};
+
+export const generateKYCLink = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findById(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (!booking.kycToken) {
+            booking.kycToken = crypto.randomBytes(32).toString('hex');
+            await booking.save();
+        }
+
+        // In a real app, this would be the frontend URL
+        const kycLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/kyc/${booking.kycToken}`;
+
+        await logActivity(id, booking.hotelId.toString(), 'KYC_LINK_GENERATED', { kycLink }, (req as any).user?.id);
+
+        res.json({ kycLink, token: booking.kycToken });
+    } catch (error) {
+        res.status(500).json({ message: 'Error generating KYC link', error });
     }
 };

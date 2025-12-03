@@ -69,13 +69,10 @@ export const requireHotel = (hotelIdParam = 'hotelId', requiredRole?: string) =>
             });
 
             const members = response.members;
-            console.log('DEBUG: requireHotel members:', members.length, 'User ID:', user.id);
             const membership = members.find(member => member.userId === user.id);
-            console.log('DEBUG: requireHotel membership:', membership);
 
             // Allow Super Admin to bypass
             if (!membership && user.role !== 'super_admin') {
-                console.log('DEBUG: requireHotel Forbidden: No membership');
                 return res.status(403).json({ message: 'Forbidden: No access to this hotel' });
             }
 

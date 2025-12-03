@@ -38,75 +38,83 @@ import ChannelManager from './pages/hotel-admin/ChannelManager';
 import GuestCRM from './pages/hotel-admin/GuestCRM';
 import Campaigns from './pages/hotel-admin/Campaigns';
 import Analytics from './pages/hotel-admin/Analytics';
+import { BookingWizard } from './pages/front-desk/BookingWizard';
+import BookingDetails from './pages/hotel-admin/BookingDetails';
 import SignIn from './components/auth/sign-in';
+import { Toaster } from "@/components/ui/sonner";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<SignIn />} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
+    <>
+      <Routes>
+        <Route path="/login" element={<SignIn />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* Public KYC Route */}
-      <Route path="/kyc/:token" element={<KYCForm />} />
+        {/* Public KYC Route */}
+        <Route path="/kyc/:token" element={<KYCForm />} />
 
-      <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
-        <Route path="/super-admin" element={<SuperAdminLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="onboarding" element={<HotelOnboarding />} />
-          <Route path="hotels" element={<HotelList />} />
-          <Route path="hotels/:hotelId/verify" element={<HotelVerification />} />
-          <Route path="plans" element={<PlanManagement />} />
-          <Route path="brands" element={<BrandManagement />} />
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+          <Route path="/super-admin" element={<SuperAdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="onboarding" element={<HotelOnboarding />} />
+            <Route path="hotels" element={<HotelList />} />
+            <Route path="hotels/:hotelId/verify" element={<HotelVerification />} />
+            <Route path="plans" element={<PlanManagement />} />
+            <Route path="brands" element={<BrandManagement />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['HOTEL_ADMIN', 'MANAGER', 'FRONT_DESK', 'HOUSEKEEPING']} />}>
-        <Route path="/hotel/:hotelId" element={<HotelAdminLayout />}>
-          <Route path="dashboard" element={<HotelDashboard />} />
-          <Route path="floors" element={<FloorManagement />} />
-          <Route path="room-types" element={<RoomTypeManagement />} />
-          <Route path="rooms" element={<RoomManagement />} />
-          <Route path="room-rack" element={<RoomRack />} />
-          <Route path="staff" element={<StaffManagement />} />
-          <Route path="bookings" element={<BookingManagement />} />
+        <Route element={<ProtectedRoute allowedRoles={['HOTEL_ADMIN', 'MANAGER', 'FRONT_DESK', 'HOUSEKEEPING']} />}>
+          <Route path="/hotel/:hotelId" element={<HotelAdminLayout />}>
+            <Route path="dashboard" element={<HotelDashboard />} />
+            <Route path="floors" element={<FloorManagement />} />
+            <Route path="room-types" element={<RoomTypeManagement />} />
+            <Route path="rooms" element={<RoomManagement />} />
+            <Route path="room-rack" element={<RoomRack />} />
+            <Route path="staff" element={<StaffManagement />} />
+            <Route path="bookings" element={<BookingManagement />} />
+            <Route path="bookings/new" element={<BookingWizard />} />
+            <Route path="bookings/:bookingId" element={<BookingDetails />} />
 
-          {/* POS Routes */}
-          <Route path="pos/menu" element={<MenuManagement />} />
-          <Route path="pos/order" element={<OrderTaking />} />
-          <Route path="pos/orders" element={<OrderList />} />
+            {/* POS Routes */}
+            <Route path="pos/menu" element={<MenuManagement />} />
+            <Route path="pos/order" element={<OrderTaking />} />
+            <Route path="pos/orders" element={<OrderList />} />
 
-          {/* Housekeeping Routes */}
-          <Route path="housekeeping" element={<HousekeepingDashboard />} />
-          <Route path="maintenance" element={<MaintenanceRequest />} />
+            {/* Housekeeping Routes */}
+            <Route path="housekeeping" element={<HousekeepingDashboard />} />
+            <Route path="maintenance" element={<MaintenanceRequest />} />
 
-          {/* Billing Routes */}
-          <Route path="invoices" element={<InvoiceList />} />
-          <Route path="invoices/:id" element={<InvoiceDetails />} />
+            {/* Billing Routes */}
+            <Route path="invoices" element={<InvoiceList />} />
+            <Route path="invoices/:id" element={<InvoiceDetails />} />
 
-          {/* Finance Routes */}
-          <Route path="finance/expenses" element={<ExpenseDashboard />} />
-          <Route path="finance/payroll" element={<PayrollManagement />} />
+            {/* Finance Routes */}
+            <Route path="finance/expenses" element={<ExpenseDashboard />} />
+            <Route path="finance/payroll" element={<PayrollManagement />} />
 
-          {/* Payment Management */}
-          <Route path="payments" element={<PaymentManagement />} />
+            {/* Payment Management */}
+            <Route path="payments" element={<PaymentManagement />} />
 
-          {/* Channel Manager */}
-          <Route path="channels" element={<ChannelManager />} />
+            {/* Channel Manager */}
+            <Route path="channels" element={<ChannelManager />} />
 
-          {/* CRM */}
-          <Route path="crm" element={<GuestCRM />} />
+            {/* CRM */}
+            <Route path="crm" element={<GuestCRM />} />
 
-          {/* Campaigns */}
-          <Route path="campaigns" element={<Campaigns />} />
+            {/* Campaigns */}
+            <Route path="campaigns" element={<Campaigns />} />
 
-          {/* Analytics */}
-          <Route path="analytics" element={<Analytics />} />
+            {/* Analytics */}
+            <Route path="analytics" element={<Analytics />} />
 
-          {/* Onboarding */}
-          <Route path="onboarding" element={<OnboardingWizard />} />
+            {/* Onboarding */}
+            <Route path="onboarding" element={<OnboardingWizard />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+      <Toaster />
+    </>
   );
 }
 

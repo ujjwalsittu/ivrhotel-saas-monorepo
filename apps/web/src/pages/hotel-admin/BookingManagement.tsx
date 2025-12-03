@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ const formSchema = z.object({
 
 const BookingManagement: React.FC = () => {
     const { hotelId } = useParams();
+    const navigate = useNavigate();
     const [bookings, setBookings] = useState<any[]>([]);
     const [roomTypes, setRoomTypes] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -353,6 +354,7 @@ const BookingManagement: React.FC = () => {
                                     <TableCell>{booking.status}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
+                                            <Button size="sm" variant="outline" onClick={() => navigate(`/hotel/${hotelId}/bookings/${booking._id}`)}>View</Button>
                                             {booking.status === 'CONFIRMED' && (
                                                 <Button size="sm" onClick={() => handleCheckIn(booking)}>Check In</Button>
                                             )}

@@ -87,7 +87,7 @@ async function main() {
         code: "DLX",
         description: "A deluxe room",
         basePrice: 100,
-        maxOccupancy: 2,
+        maxOccupancy: { adults: 2, children: 1 },
         amenities: ["Wifi", "TV"]
     };
     res = await fetch(`${API_URL}/hotels/${hotelId}/room-types`, {
@@ -95,6 +95,10 @@ async function main() {
         headers,
         body: JSON.stringify(roomTypeData)
     });
+    if (!res.ok) {
+        console.error('Create Room Type failed:', await res.text());
+        return;
+    }
     const roomType = await res.json();
     const roomTypeId = roomType._id;
     console.log(`Room Type created: ${roomTypeId}`);
