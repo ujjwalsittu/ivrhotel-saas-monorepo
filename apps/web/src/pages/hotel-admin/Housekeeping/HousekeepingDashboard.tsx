@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
+import { Badge } from '@ivrhotel/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ivrhotel/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ivrhotel/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@ivrhotel/ui";
+import { Label } from "@ivrhotel/ui";
+import { Input } from "@ivrhotel/ui";
+import { Textarea } from "@ivrhotel/ui";
 
 const HousekeepingDashboard: React.FC = () => {
     const { hotelId } = useParams();

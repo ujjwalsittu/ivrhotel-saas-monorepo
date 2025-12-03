@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { signIn } from '@/lib/auth-client';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Button } from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Label } from '@ivrhotel/ui';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');

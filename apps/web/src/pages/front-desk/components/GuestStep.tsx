@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { Label } from '@ivrhotel/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
 import { Search, UserPlus, Check } from 'lucide-react';
 // Actually I don't have api client file path confirmed, I'll use axios for now or check if I can find it.
 // Previous context mentioned `apps/web/src/services/api.ts` or similar.

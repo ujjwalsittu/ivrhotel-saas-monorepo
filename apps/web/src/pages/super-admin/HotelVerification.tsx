@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
+import { Badge } from '@ivrhotel/ui';
+import { Textarea } from '@ivrhotel/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ivrhotel/ui';
 import { CheckCircle2, XCircle, AlertCircle, FileText, Image as ImageIcon } from 'lucide-react';
 
 interface Hotel {

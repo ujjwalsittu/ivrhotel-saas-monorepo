@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Badge } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
 import { Loader2, Clock, CheckCircle2, ChefHat } from 'lucide-react';
 import { toast } from 'sonner';
 

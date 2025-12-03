@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Upload, X, FileIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Button } from '@ivrhotel/ui';
+import { cn } from '@ivrhotel/ui';
 
 interface FileUploadProps {
     accept?: string;

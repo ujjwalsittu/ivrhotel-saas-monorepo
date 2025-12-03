@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Label } from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { Textarea } from '@ivrhotel/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ivrhotel/ui';
 import { differenceInCalendarDays } from 'date-fns';
 
 interface ReviewStepProps {

@@ -7,6 +7,7 @@ import HotelOnboarding from './pages/super-admin/HotelOnboarding';
 import HotelList from './pages/super-admin/HotelList';
 import PlanManagement from './pages/super-admin/PlanManagement';
 import BrandManagement from './pages/super-admin/BrandManagement';
+import GlobalConfiguration from './pages/super-admin/GlobalConfiguration';
 
 import HotelAdminLayout from './layouts/HotelAdminLayout';
 import FloorManagement from './pages/hotel-admin/FloorManagement';
@@ -44,7 +45,7 @@ import { BookingWizard } from './pages/front-desk/BookingWizard';
 import BookingDetails from './pages/hotel-admin/BookingDetails';
 import InventoryDashboard from './pages/hotel-admin/Inventory/InventoryDashboard';
 import SignIn from './components/auth/sign-in';
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@ivrhotel/ui";
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
             <Route path="hotels/:hotelId/verify" element={<HotelVerification />} />
             <Route path="plans" element={<PlanManagement />} />
             <Route path="brands" element={<BrandManagement />} />
+            <Route path="configuration" element={<GlobalConfiguration />} />
           </Route>
         </Route>
 

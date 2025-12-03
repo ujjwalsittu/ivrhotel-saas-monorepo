@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { Label } from '@ivrhotel/ui';
+import { Textarea } from '@ivrhotel/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ivrhotel/ui';
 import { Layout, Palette, Globe, ExternalLink } from 'lucide-react';
 
 interface WebsiteConfig {

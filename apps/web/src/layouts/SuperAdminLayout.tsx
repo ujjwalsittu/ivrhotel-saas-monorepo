@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@ivrhotel/ui';
+import { Card } from '@ivrhotel/ui';
 
 const SuperAdminLayout: React.FC = () => {
     return (
@@ -23,6 +23,9 @@ const SuperAdminLayout: React.FC = () => {
                     </Link>
                     <Link to="/super-admin/plans" className="block px-6 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                         Plans
+                    </Link>
+                    <Link to="/super-admin/configuration" className="block px-6 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                        Configuration
                     </Link>
                 </nav>
             </aside>

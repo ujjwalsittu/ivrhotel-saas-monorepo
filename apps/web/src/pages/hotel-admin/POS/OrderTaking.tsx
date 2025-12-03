@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { ScrollArea } from '@ivrhotel/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ivrhotel/ui';
+import { Badge } from '@ivrhotel/ui';
 import { Loader2, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@ivrhotel/ui';
 import { toast } from 'sonner';
 
 interface MenuItem {

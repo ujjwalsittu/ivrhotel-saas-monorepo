@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { CheckCircle2, Clock, XCircle, CreditCard, User, LogIn, LogOut } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@ivrhotel/ui';
 
 interface Activity {
     _id: string;

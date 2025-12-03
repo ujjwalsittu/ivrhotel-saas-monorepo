@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { Label } from '@ivrhotel/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ivrhotel/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@ivrhotel/ui";
+import { Badge } from '@ivrhotel/ui';
 import { Plus, Building2, Settings } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@ivrhotel/ui';
 
 interface Brand {
     _id: string;

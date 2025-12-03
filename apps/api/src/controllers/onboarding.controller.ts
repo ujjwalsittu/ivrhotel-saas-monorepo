@@ -37,7 +37,24 @@ const onboardingDataSchema = z.object({
         phone: z.string(),
         signature: z.string().optional()
     }).optional(),
-    businessStructure: z.enum(['PRIVATE_LIMITED', 'LLP', 'INDIVIDUAL']).optional()
+    businessStructure: z.enum(['PRIVATE_LIMITED', 'LLP', 'INDIVIDUAL']).optional(),
+
+    // New Dynamic Fields
+    amenities: z.array(z.string()).optional(), // Array of Amenity IDs
+    policies: z.object({
+        checkInTime: z.string().optional(),
+        checkOutTime: z.string().optional(),
+        cancellationPolicy: z.string().optional(),
+        visitorPolicy: z.string().optional(),
+        petPolicy: z.object({
+            allowed: z.boolean(),
+            details: z.string().optional()
+        }).optional(),
+        smokingPolicy: z.object({
+            allowed: z.boolean(),
+            details: z.string().optional()
+        }).optional()
+    }).optional()
 });
 
 /**

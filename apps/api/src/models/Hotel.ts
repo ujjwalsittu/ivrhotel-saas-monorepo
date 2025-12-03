@@ -35,9 +35,28 @@ export interface IHotel extends Document {
     legalAddress?: string; // Full legal address for registration
 
     // Hotel Classification
-    hotelType: 'LODGING' | 'NORMAL' | 'PREMIUM' | 'LUXE' | 'PREMIUM_LUXE';
+    hotelType: string; // Reference to PropertyType code
     handlingType: 'ROOMS' | 'ROOMS_KITCHEN' | 'ROOMS_RESTAURANT_KITCHEN' | 'FULL';
     safetyRating?: string;
+
+    // Amenities
+    amenities: mongoose.Types.ObjectId[]; // References to Amenity model
+
+    // Policies
+    policies: {
+        checkInTime: string;
+        checkOutTime: string;
+        cancellationPolicy?: string;
+        visitorPolicy?: string;
+        petPolicy: {
+            allowed: boolean;
+            details?: string;
+        };
+        smokingPolicy: {
+            allowed: boolean;
+            details?: string;
+        };
+    };
 
     // Legal & Compliance
     gstNumber?: string;
@@ -128,17 +147,30 @@ const HotelSchema: Schema = new Schema(
         },
         legalAddress: { type: String },
 
-        hotelType: {
-            type: String,
-            enum: ['LODGING', 'NORMAL', 'PREMIUM', 'LUXE', 'PREMIUM_LUXE'],
-            default: 'NORMAL'
-        },
+        hotelType: { type: String, required: true }, // Validated against PropertyType
         handlingType: {
             type: String,
             enum: ['ROOMS', 'ROOMS_KITCHEN', 'ROOMS_RESTAURANT_KITCHEN', 'FULL'],
             default: 'ROOMS'
         },
         safetyRating: { type: String },
+
+        amenities: [{ type: Schema.Types.ObjectId, ref: 'Amenity' }],
+
+        policies: {
+            checkInTime: { type: String, default: '12:00' },
+            checkOutTime: { type: String, default: '11:00' },
+            cancellationPolicy: { type: String },
+            visitorPolicy: { type: String },
+            petPolicy: {
+                allowed: { type: Boolean, default: false },
+                details: { type: String }
+            },
+            smokingPolicy: {
+                allowed: { type: Boolean, default: false },
+                details: { type: String }
+            }
+        },
 
         gstNumber: { type: String },
         authorizedSignatory: {

@@ -1,8 +1,8 @@
 import React, { useRef, useState, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { Camera, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@ivrhotel/ui';
+import { Card, CardContent } from '@ivrhotel/ui';
 
 interface SelfieCaptureProps {
     onCapture: (imageDataUrl: string) => void;

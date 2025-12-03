@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@ivrhotel/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@ivrhotel/ui';
 import { GuestStep } from './components/GuestStep';
 import { RoomStep } from './components/RoomStep';
 import { ReviewStep } from './components/ReviewStep';

@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
+import { Button } from '@ivrhotel/ui';
 import {
     Form,
     FormControl,
@@ -11,10 +11,10 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+} from '@ivrhotel/ui';
+import { Input } from '@ivrhotel/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ivrhotel/ui';
 
 import { authClient } from '@/lib/auth-client';
 

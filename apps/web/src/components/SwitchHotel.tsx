@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Check, ChevronsUpDown, Building2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
 import {
     Command,
     CommandEmpty,
     CommandGroup,
     CommandInput,
     CommandItem,
-} from '@/components/ui/command';
+} from '@ivrhotel/ui';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@ivrhotel/ui';
 import api from '@/services/api';
 
 interface Hotel {

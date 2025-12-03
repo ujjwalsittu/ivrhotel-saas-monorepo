@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
 
 const HotelList: React.FC = () => {
     const [hotels, setHotels] = useState<any[]>([]);

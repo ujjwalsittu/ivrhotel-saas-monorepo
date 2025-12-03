@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
 import { BookingTimeline } from '@/components/BookingTimeline';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@ivrhotel/ui';
 
 const BookingDetails: React.FC = () => {
     const { hotelId, bookingId } = useParams();

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card, CardContent, CardHeader, CardTitle } from '@ivrhotel/ui';
+import { Badge } from '@ivrhotel/ui';
+import { Button } from '@ivrhotel/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ivrhotel/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@ivrhotel/ui';
 import { CheckCircle2, XCircle, AlertCircle, Clock, BedDouble, Paintbrush } from 'lucide-react';
 
 interface Room {

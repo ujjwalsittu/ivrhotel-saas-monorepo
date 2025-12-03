@@ -29,4 +29,24 @@ export const uploadDocuments = async (hotelId: string, files: File[]) => {
     return response.data;
 };
 
+export const getAmenities = async () => {
+    const response = await api.get('/config/amenities');
+    return response.data;
+};
+
+export const getPropertyTypes = async () => {
+    const response = await api.get('/config/property-types');
+    return response.data;
+};
+
+export const createAmenity = async (data: any) => {
+    const response = await api.post('/config/amenities', data);
+    return response.data;
+};
+
+export const createPropertyType = async (data: any) => {
+    const response = await api.post('/config/property-types', data);
+    return response.data;
+};
+
 export default api;

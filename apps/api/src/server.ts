@@ -7,6 +7,7 @@ import path from 'path';
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { resolveTenant } from './middleware/tenant.middleware';
+import configRoutes from './routes/config.routes';
 
 // Route imports
 import hotelRoutes from './routes/hotel.routes';
@@ -52,6 +53,7 @@ app.use(resolveTenant);
 // Health check routes (public)
 app.use('/health', healthRoutes);
 
+app.use('/api/config', configRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/hotels/:hotelId', roomRoutes);
 app.use('/api/hotels/:hotelId/staff', staffRoutes);

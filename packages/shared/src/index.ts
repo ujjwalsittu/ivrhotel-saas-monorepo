@@ -1,2 +1,2 @@
-export const SHARED_CONSTANT = "shared";
+export * from "./constants";
 // Placeholder for shared types
