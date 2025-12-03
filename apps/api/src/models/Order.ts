@@ -4,6 +4,8 @@ export interface IOrder extends Document {
     hotelId: mongoose.Types.ObjectId;
     roomId?: mongoose.Types.ObjectId;
     guestId?: mongoose.Types.ObjectId;
+    tableNumber?: string;
+    notes?: string;
     items: {
         menuItemId: mongoose.Types.ObjectId;
         name: string;
@@ -22,6 +24,8 @@ const OrderSchema: Schema = new Schema(
         hotelId: { type: Schema.Types.ObjectId, ref: 'Hotel', required: true },
         roomId: { type: Schema.Types.ObjectId, ref: 'Room' },
         guestId: { type: Schema.Types.ObjectId, ref: 'Guest' },
+        tableNumber: { type: String },
+        notes: { type: String },
         items: [{
             menuItemId: { type: Schema.Types.ObjectId, ref: 'MenuItem', required: true },
             name: { type: String, required: true },

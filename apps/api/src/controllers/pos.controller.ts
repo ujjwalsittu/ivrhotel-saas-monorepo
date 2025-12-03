@@ -10,12 +10,15 @@ const createMenuItemSchema = z.object({
     description: z.string().optional(),
     price: z.number().min(0),
     category: z.enum(['FOOD', 'BEVERAGE', 'SERVICE', 'OTHER']),
+    imageUrl: z.string().optional(),
     isAvailable: z.boolean().default(true),
 });
 
 const createOrderSchema = z.object({
     roomId: z.string().optional(),
     guestId: z.string().optional(),
+    tableNumber: z.string().optional(),
+    notes: z.string().optional(),
     items: z.array(z.object({
         menuItemId: z.string(),
         quantity: z.number().min(1),
@@ -121,6 +124,8 @@ export const createOrder = async (req: Request, res: Response) => {
             hotelId,
             roomId: validatedData.roomId,
             guestId: validatedData.guestId,
+            tableNumber: validatedData.tableNumber,
+            notes: validatedData.notes,
             items: orderItems,
             totalAmount,
             status: 'PENDING',

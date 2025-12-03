@@ -6,6 +6,7 @@ export interface IMenuItem extends Document {
     description?: string;
     price: number;
     category: 'FOOD' | 'BEVERAGE' | 'SERVICE' | 'OTHER';
+    imageUrl?: string;
     isAvailable: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -18,6 +19,7 @@ const MenuItemSchema: Schema = new Schema(
         description: { type: String },
         price: { type: Number, required: true, min: 0 },
         category: { type: String, enum: ['FOOD', 'BEVERAGE', 'SERVICE', 'OTHER'], default: 'FOOD' },
+        imageUrl: { type: String },
         isAvailable: { type: Boolean, default: true },
     },
     { timestamps: true }

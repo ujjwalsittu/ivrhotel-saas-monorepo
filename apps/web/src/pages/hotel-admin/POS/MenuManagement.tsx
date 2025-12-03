@@ -24,6 +24,7 @@ const formSchema = z.object({
     description: z.string().optional(),
     price: z.coerce.number().min(0),
     category: z.enum(['FOOD', 'BEVERAGE', 'SERVICE', 'OTHER']),
+    imageUrl: z.string().optional(),
     isAvailable: z.boolean().default(true),
 });
 
@@ -39,6 +40,7 @@ const MenuManagement: React.FC = () => {
             description: "",
             price: 0,
             category: "FOOD" as const,
+            imageUrl: "",
             isAvailable: true,
         },
     });
@@ -69,6 +71,7 @@ const MenuManagement: React.FC = () => {
                 description: "",
                 price: 0,
                 category: "FOOD",
+                imageUrl: "",
                 isAvailable: true,
             });
             setEditingId(null);
@@ -85,6 +88,7 @@ const MenuManagement: React.FC = () => {
             description: item.description || "",
             price: item.price,
             category: item.category,
+            imageUrl: item.imageUrl || "",
             isAvailable: item.isAvailable,
         });
     };
@@ -106,6 +110,7 @@ const MenuManagement: React.FC = () => {
             description: "",
             price: 0,
             category: "FOOD",
+            imageUrl: "",
             isAvailable: true,
         });
     };
@@ -185,6 +190,21 @@ const MenuManagement: React.FC = () => {
                                     )}
                                 />
                             </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="imageUrl"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Image URL</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="https://example.com/image.jpg" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                             <FormField
                                 control={form.control}
                                 name="isAvailable"
@@ -234,8 +254,15 @@ const MenuManagement: React.FC = () => {
                             {menuItems.map((item: any) => (
                                 <TableRow key={item._id}>
                                     <TableCell>
-                                        <div className="font-medium">{item.name}</div>
-                                        <div className="text-sm text-muted-foreground">{item.description}</div>
+                                        <div className="flex items-center gap-3">
+                                            {item.imageUrl && (
+                                                <img src={item.imageUrl} alt={item.name} className="w-10 h-10 rounded-md object-cover" />
+                                            )}
+                                            <div>
+                                                <div className="font-medium">{item.name}</div>
+                                                <div className="text-sm text-muted-foreground">{item.description}</div>
+                                            </div>
+                                        </div>
                                     </TableCell>
                                     <TableCell>{item.category}</TableCell>
                                     <TableCell>${item.price}</TableCell>

@@ -13,6 +13,27 @@ const BookingDetails: React.FC = () => {
     const [booking, setBooking] = useState<any>(null);
     const [activities, setActivities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [kycLink, setKycLink] = useState<string | null>(null);
+
+    const handleGenerateKYC = async () => {
+        try {
+            const res = await api.post(`/hotels/${hotelId}/bookings/${bookingId}/kyc-link`);
+            setKycLink(res.data.kycLink);
+        } catch (error) {
+            console.error('Error generating KYC link:', error);
+        }
+    };
+
+    const handleAutoAssignRoom = async () => {
+        try {
+            const res = await api.post(`/hotels/${hotelId}/bookings/${bookingId}/allocate-room`);
+            alert(`Room ${res.data.room.number} assigned successfully!`);
+            // Refresh data
+            window.location.reload();
+        } catch (error: any) {
+            alert(error.response?.data?.message || 'Error allocating room');
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -108,7 +129,14 @@ const BookingDetails: React.FC = () => {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Room</span>
-                                <span className="font-medium">{booking.roomId?.number || 'Not Assigned'}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium">{booking.roomId?.number || 'Not Assigned'}</span>
+                                    {!booking.roomId && (
+                                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={handleAutoAssignRoom}>
+                                            Auto Assign
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Check In</span>
@@ -128,13 +156,54 @@ const BookingDetails: React.FC = () => {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Activity Timeline</CardTitle>
+                        <CardTitle>Identity Verification</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <BookingTimeline activities={activities} />
+                    <CardContent className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">KYC Status</span>
+                            <Badge variant={booking.kycStatus === 'VERIFIED' ? 'default' : 'secondary'}>
+                                {booking.kycStatus || 'PENDING'}
+                            </Badge>
+                        </div>
+
+                        {booking.kycStatus !== 'VERIFIED' && (
+                            <div className="space-y-2">
+                                {kycLink ? (
+                                    <div className="space-y-2">
+                                        <div className="p-2 bg-muted rounded text-xs break-all">
+                                            {kycLink}
+                                        </div>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="w-full"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(kycLink);
+                                                // toast.success('Link copied'); // Need to import toast
+                                            }}
+                                        >
+                                            Copy Link
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button onClick={handleGenerateKYC} className="w-full" variant="outline">
+                                        Generate KYC Link
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Activity Timeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <BookingTimeline activities={activities} />
+                </CardContent>
+            </Card>
         </div>
     );
 };

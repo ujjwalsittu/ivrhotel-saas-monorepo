@@ -334,3 +334,56 @@ export const generateKYCLink = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error generating KYC link', error });
     }
 };
+
+export const autoAllocateRoom = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findById(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (booking.roomId) {
+            return res.status(400).json({ message: 'Room already assigned' });
+        }
+
+        // 1. Find all rooms of this type
+        const rooms = await Room.find({
+            hotelId: booking.hotelId,
+            roomTypeId: booking.roomTypeId,
+            status: { $nin: ['OUT_OF_ORDER', 'MAINTENANCE'] }
+        });
+
+        // 2. Check availability for each room
+        let bestRoom = null;
+
+        for (const room of rooms) {
+            const isAvailable = await checkRoomAvailability(room._id.toString(), booking.checkInDate, booking.checkOutDate);
+            if (isAvailable) {
+                // Prioritize CLEAN rooms
+                if (room.status === 'CLEAN') {
+                    bestRoom = room;
+                    break; // Found the perfect room
+                }
+                // If not clean, keep it as a candidate but keep looking for a clean one
+                if (!bestRoom) {
+                    bestRoom = room;
+                }
+            }
+        }
+
+        if (!bestRoom) {
+            return res.status(404).json({ message: 'No available rooms found for this room type' });
+        }
+
+        // 3. Assign Room
+        booking.roomId = bestRoom._id as any;
+        await booking.save();
+
+        await logActivity(id, booking.hotelId.toString(), 'ROOM_ALLOCATED', { roomId: bestRoom._id, roomNumber: bestRoom.number }, (req as any).user?.id);
+
+        res.json({ message: 'Room allocated successfully', room: bestRoom });
+    } catch (error) {
+        res.status(500).json({ message: 'Error allocating room', error });
+    }
+};

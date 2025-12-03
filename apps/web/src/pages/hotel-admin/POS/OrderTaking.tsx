@@ -4,21 +4,39 @@ import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+
+interface MenuItem {
+    _id: string;
+    name: string;
+    description: string;
+    price: number;
+    category: string;
+    imageUrl?: string;
+    isAvailable: boolean;
+}
+
+interface CartItem extends MenuItem {
+    quantity: number;
+}
 
 const OrderTaking: React.FC = () => {
     const { hotelId } = useParams();
-    const [menuItems, setMenuItems] = useState<any[]>([]);
-    const [cart, setCart] = useState<any[]>([]);
-    const [rooms, setRooms] = useState<any[]>([]);
-    const [selectedRoomId, setSelectedRoomId] = useState<string>("");
-    const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+    const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+    const [tableNumber, setTableNumber] = useState('');
+    const [notes, setNotes] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         fetchMenuItems();
-        fetchRooms();
     }, [hotelId]);
 
     const fetchMenuItems = async () => {
@@ -27,148 +45,203 @@ const OrderTaking: React.FC = () => {
             setMenuItems(response.data);
         } catch (error) {
             console.error('Error fetching menu items:', error);
+            toast.error('Failed to load menu');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const fetchRooms = async () => {
-        try {
-            const response = await api.get(`/hotels/${hotelId}/rooms?status=OCCUPIED`);
-            setRooms(response.data.data || response.data);
-        } catch (error) {
-            console.error('Error fetching rooms:', error);
-        }
-    };
-
-    const addToCart = (item: any) => {
+    const addToCart = (item: MenuItem) => {
         setCart(prev => {
-            const existing = prev.find(i => i.menuItemId === item._id);
+            const existing = prev.find(i => i._id === item._id);
             if (existing) {
-                return prev.map(i => i.menuItemId === item._id ? { ...i, quantity: i.quantity + 1 } : i);
+                return prev.map(i => i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i);
             }
-            return [...prev, { menuItemId: item._id, name: item.name, price: item.price, quantity: 1 }];
+            return [...prev, { ...item, quantity: 1 }];
         });
     };
 
     const removeFromCart = (itemId: string) => {
-        setCart(prev => prev.filter(i => i.menuItemId !== itemId));
+        setCart(prev => prev.filter(i => i._id !== itemId));
     };
 
     const updateQuantity = (itemId: string, delta: number) => {
         setCart(prev => prev.map(i => {
-            if (i.menuItemId === itemId) {
-                const newQty = i.quantity + delta;
-                return newQty > 0 ? { ...i, quantity: newQty } : i;
+            if (i._id === itemId) {
+                const newQuantity = Math.max(0, i.quantity + delta);
+                return { ...i, quantity: newQuantity };
             }
             return i;
-        }));
+        }).filter(i => i.quantity > 0));
     };
 
-    const placeOrder = async () => {
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    const handlePlaceOrder = async () => {
         if (cart.length === 0) return;
+        if (!tableNumber) {
+            toast.error('Please enter a table number');
+            return;
+        }
+
+        setSubmitting(true);
         try {
-            const payload = {
-                roomId: selectedRoomId || undefined,
-                items: cart.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity })),
+            const orderData = {
+                items: cart.map(item => ({
+                    menuItemId: item._id,
+                    quantity: item.quantity
+                })),
+                tableNumber,
+                notes
             };
-            await api.post(`/hotels/${hotelId}/pos/orders`, payload);
-            alert('Order placed successfully!');
+
+            await api.post(`/hotels/${hotelId}/pos/orders`, orderData);
+            toast.success('Order placed successfully');
             setCart([]);
-            setSelectedRoomId("");
+            setTableNumber('');
+            setNotes('');
         } catch (error) {
             console.error('Error placing order:', error);
-            alert('Failed to place order');
+            toast.error('Failed to place order');
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const filteredItems = categoryFilter === "ALL"
+    const filteredItems = selectedCategory === 'ALL'
         ? menuItems
-        : menuItems.filter(i => i.category === categoryFilter);
+        : menuItems.filter(item => item.category === selectedCategory);
 
-    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const categories = ['ALL', 'FOOD', 'BEVERAGE', 'SERVICE', 'OTHER'];
+
+    if (loading) {
+        return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
 
     return (
-        <div className="grid grid-cols-3 gap-6 h-[calc(100vh-100px)]">
+        <div className="flex h-[calc(100vh-100px)] gap-4">
             {/* Menu Section */}
-            <div className="col-span-2 space-y-4 overflow-y-auto pr-2">
-                <div className="flex gap-2">
-                    {['ALL', 'FOOD', 'BEVERAGE', 'SERVICE', 'OTHER'].map(cat => (
-                        <Button
-                            key={cat}
-                            variant={categoryFilter === cat ? "default" : "outline"}
-                            onClick={() => setCategoryFilter(cat)}
-                        >
-                            {cat}
-                        </Button>
-                    ))}
+            <div className="flex-1 flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold">Menu</h1>
+                    <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <TabsList>
+                            {categories.map(cat => (
+                                <TabsTrigger key={cat} value={cat}>{cat}</TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                    {filteredItems.map((item: any) => (
-                        <Card key={item._id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => addToCart(item)}>
-                            <CardContent className="p-4 flex flex-col justify-between h-full">
-                                <div>
-                                    <div className="font-bold text-lg">{item.name}</div>
-                                    <div className="text-sm text-muted-foreground line-clamp-2">{item.description}</div>
+                <ScrollArea className="flex-1">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-4">
+                        {filteredItems.map(item => (
+                            <Card
+                                key={item._id}
+                                className={`cursor-pointer transition-all hover:shadow-md ${!item.isAvailable ? 'opacity-50 grayscale' : ''}`}
+                                onClick={() => item.isAvailable && addToCart(item)}
+                            >
+                                <div className="aspect-video w-full bg-muted relative overflow-hidden rounded-t-lg">
+                                    {item.imageUrl ? (
+                                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
+                                    )}
+                                    {!item.isAvailable && (
+                                        <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                                            <Badge variant="destructive">Unavailable</Badge>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="mt-4 flex justify-between items-center">
-                                    <span className="font-bold">${item.price}</span>
-                                    <Button size="sm" variant="ghost"><Plus className="h-4 w-4" /></Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                                <CardContent className="p-4">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-semibold line-clamp-1">{item.name}</h3>
+                                        <span className="font-bold">${item.price}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </ScrollArea>
             </div>
 
             {/* Cart Section */}
-            <div className="col-span-1 border-l pl-4 flex flex-col h-full">
-                <div className="mb-4">
-                    <h2 className="text-xl font-bold mb-2">Current Order</h2>
-                    <Select onValueChange={setSelectedRoomId} value={selectedRoomId}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Room (Optional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {rooms.map((room) => (
-                                <SelectItem key={room._id} value={room._id}>
-                                    Room {room.number}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-4">
-                    {cart.length === 0 ? (
-                        <div className="text-center text-muted-foreground py-10">Cart is empty</div>
-                    ) : (
-                        cart.map((item) => (
-                            <div key={item.menuItemId} className="flex justify-between items-center border-b pb-2">
-                                <div>
-                                    <div className="font-medium">{item.name}</div>
-                                    <div className="text-sm text-muted-foreground">${item.price} x {item.quantity}</div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.menuItemId, -1)}><Minus className="h-3 w-3" /></Button>
-                                    <span className="w-4 text-center">{item.quantity}</span>
-                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.menuItemId, 1)}><Plus className="h-3 w-3" /></Button>
-                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeFromCart(item.menuItemId)}><Trash2 className="h-3 w-3" /></Button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                <div className="mt-auto pt-4 border-t">
-                    <div className="flex justify-between text-lg font-bold mb-4">
-                        <span>Total</span>
-                        <span>${cartTotal.toFixed(2)}</span>
+            <Card className="w-[350px] flex flex-col h-full">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShoppingCart className="h-5 w-5" />
+                        Current Order
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+                    <div className="space-y-4">
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Table Number</label>
+                            <Input
+                                placeholder="e.g. T-12"
+                                value={tableNumber}
+                                onChange={(e) => setTableNumber(e.target.value)}
+                            />
+                        </div>
                     </div>
-                    <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={placeOrder}>
-                        Place Order
-                    </Button>
-                </div>
-            </div>
+
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <div className="space-y-4 py-4">
+                            {cart.length === 0 ? (
+                                <div className="text-center text-muted-foreground py-8">
+                                    Cart is empty
+                                </div>
+                            ) : (
+                                cart.map(item => (
+                                    <div key={item._id} className="flex items-center justify-between gap-2">
+                                        <div className="flex-1">
+                                            <div className="font-medium text-sm">{item.name}</div>
+                                            <div className="text-xs text-muted-foreground">${item.price} x {item.quantity}</div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item._id, -1)}>
+                                                <Minus className="h-3 w-3" />
+                                            </Button>
+                                            <span className="text-sm w-4 text-center">{item.quantity}</span>
+                                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item._id, 1)}>
+                                                <Plus className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </ScrollArea>
+
+                    <div className="space-y-4 pt-4 border-t mt-auto">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Notes</label>
+                            <Textarea
+                                placeholder="Special instructions..."
+                                className="h-20 resize-none"
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex justify-between items-center text-lg font-bold">
+                            <span>Total</span>
+                            <span>${totalAmount.toFixed(2)}</span>
+                        </div>
+
+                        <Button
+                            className="w-full"
+                            size="lg"
+                            onClick={handlePlaceOrder}
+                            disabled={cart.length === 0 || submitting}
+                        >
+                            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            Place Order
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

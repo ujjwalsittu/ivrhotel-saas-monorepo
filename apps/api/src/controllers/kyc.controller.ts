@@ -154,7 +154,7 @@ export const completeKYC = async (req: Request, res: Response) => {
         guest.kycStatus = 'VERIFIED';
         await guest.save();
 
-        await logActivity(booking._id as string, booking.hotelId.toString(), 'KYC_COMPLETED', { guestId: guest._id });
+        await logActivity(booking._id.toString(), booking.hotelId.toString(), 'KYC_COMPLETED', { guestId: guest._id });
 
         res.json({ message: 'KYC Completed' });
     } catch (error) {
