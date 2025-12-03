@@ -5,6 +5,7 @@ import { Guest } from '../models/Guest';
 import { Room } from '../models/Room';
 import { RoomType } from '../models/RoomType';
 import { BookingActivity } from '../models/BookingActivity';
+import { HousekeepingTask } from '../models/HousekeepingTask';
 import { z } from 'zod';
 
 const createBookingSchema = z.object({
@@ -288,9 +289,19 @@ export const checkOut = async (req: Request, res: Response) => {
 
         await logActivity(id, booking.hotelId.toString(), 'CHECKED_OUT', {}, (req as any).user?.id);
 
-        // Update Room Status
+        // Update Room Status & Create Housekeeping Task
         if (booking.roomId) {
             await Room.findByIdAndUpdate(booking.roomId, { status: 'DIRTY' }); // Needs cleaning
+
+            // Auto-generate housekeeping task
+            await HousekeepingTask.create({
+                hotelId: booking.hotelId,
+                roomId: booking.roomId,
+                type: 'CLEANING',
+                priority: 'HIGH',
+                description: 'Auto-generated cleaning task for checkout',
+                status: 'PENDING'
+            });
         }
 
         res.json(booking);

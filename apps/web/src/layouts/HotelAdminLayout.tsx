@@ -3,7 +3,8 @@ import { Outlet, Link, useParams, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, Bed, Layers, DoorOpen, Users, CalendarDays,
     CreditCard, FileText, ShoppingCart, Sparkles, Wrench, TrendingUp,
-    Mail, Megaphone, DollarSign, Settings
+    Mail, Megaphone, DollarSign, Settings, Brush, Package,
+    BarChart, Globe, LogOut, Building2, ClipboardList, Utensils, BedDouble
 } from 'lucide-react';
 
 interface NavItem {
@@ -25,7 +26,7 @@ const HotelAdminLayout: React.FC = () => {
         {
             title: 'Overview',
             items: [
-                { label: 'Dashboard', path: `/hotel/${hotelId}/dashboard`, icon: LayoutDashboard }
+                { label: 'Dashboard', path: `/ hotel / ${hotelId}/dashboard`, icon: LayoutDashboard }
             ]
         },
         {
@@ -41,6 +42,7 @@ const HotelAdminLayout: React.FC = () => {
             title: 'Operations',
             items: [
                 { label: 'Housekeeping', path: `/hotel/${hotelId}/housekeeping`, icon: Sparkles },
+                { label: 'Inventory', path: `/hotel/${hotelId}/inventory`, icon: Package },
                 { label: 'Maintenance', path: `/hotel/${hotelId}/maintenance`, icon: Wrench },
                 { label: 'Staff', path: `/hotel/${hotelId}/staff`, icon: Users }
             ]
@@ -64,7 +66,8 @@ const HotelAdminLayout: React.FC = () => {
         {
             title: 'Analytics & Reports',
             items: [
-                { label: 'Analytics', path: `/hotel/${hotelId}/analytics`, icon: TrendingUp }
+                { label: 'Analytics', path: `/hotels/${hotelId}/analytics`, icon: BarChart },
+                { label: 'Website', path: `/hotels/${hotelId}/website`, icon: Globe },
             ]
         },
         {

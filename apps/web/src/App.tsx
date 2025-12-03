@@ -37,9 +37,12 @@ import PaymentManagement from './pages/hotel-admin/PaymentManagement';
 import ChannelManager from './pages/hotel-admin/ChannelManager';
 import GuestCRM from './pages/hotel-admin/GuestCRM';
 import Campaigns from './pages/hotel-admin/Campaigns';
-import Analytics from './pages/hotel-admin/Analytics';
+import React from 'react';
+const Analytics = React.lazy(() => import('./pages/hotel-admin/Analytics'));
+const WebsiteBuilder = React.lazy(() => import('./pages/hotel-admin/WebsiteBuilder'));
 import { BookingWizard } from './pages/front-desk/BookingWizard';
 import BookingDetails from './pages/hotel-admin/BookingDetails';
+import InventoryDashboard from './pages/hotel-admin/Inventory/InventoryDashboard';
 import SignIn from './components/auth/sign-in';
 import { Toaster } from "@/components/ui/sonner";
 
@@ -107,9 +110,13 @@ function App() {
 
             {/* Analytics */}
             <Route path="analytics" element={<Analytics />} />
+            <Route path="website" element={<WebsiteBuilder />} />
 
             {/* Onboarding */}
             <Route path="onboarding" element={<OnboardingWizard />} />
+
+            {/* Inventory */}
+            <Route path="inventory" element={<InventoryDashboard />} />
           </Route>
         </Route>
       </Routes>

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Send, Users, MessageSquare } from 'lucide-react';
+import { Send, Users, MessageSquare, Megaphone } from 'lucide-react';
 
 interface Guest {
     name: string;
@@ -116,6 +116,10 @@ const GuestCRM: React.FC = () => {
                     <TabsTrigger value="templates">
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Templates
+                    </TabsTrigger>
+                    <TabsTrigger value="campaigns">
+                        <Megaphone className="h-4 w-4 mr-2" />
+                        Campaigns
                     </TabsTrigger>
                 </TabsList>
 
@@ -279,6 +283,23 @@ const GuestCRM: React.FC = () => {
                                     ))}
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Campaigns Tab */}
+                <TabsContent value="campaigns">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle>Marketing Campaigns</CardTitle>
+                                <Button size="sm">Create Campaign</Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-center text-muted-foreground py-8">
+                                No campaigns created yet
+                            </p>
                         </CardContent>
                     </Card>
                 </TabsContent>

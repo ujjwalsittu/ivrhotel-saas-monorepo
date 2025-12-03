@@ -41,7 +41,7 @@ const ChannelManager: React.FC = () => {
 
     const loadMappings = async () => {
         try {
-            const response = await api.get(`/channels/hotels/${hotelId}/channels`);
+            const response = await api.get(`/hotels/${hotelId}/channels`);
             setMappings(response.data);
         } catch (error) {
             console.error('Error loading mappings:', error);
@@ -56,7 +56,7 @@ const ChannelManager: React.FC = () => {
 
         setLoading(true);
         try {
-            await api.post(`/channels/hotels/${hotelId}/channels`, {
+            await api.post(`/hotels/${hotelId}/channels`, {
                 ota: selectedOTA,
                 email: otaEmail,
                 roomMappings: [], // Will be configured separately
@@ -80,7 +80,7 @@ const ChannelManager: React.FC = () => {
 
         setLoading(true);
         try {
-            const response = await api.post(`/channels/hotels/${hotelId}/channels/parse-email`, {
+            const response = await api.post(`/hotels/${hotelId}/channels/parse-email`, {
                 emailContent: emailToParse,
                 emailSubject: 'Test Email',
                 fromAddress: 'test@makemytrip.com'

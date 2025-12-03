@@ -3,16 +3,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IMessageTemplate extends Document {
     hotelId: mongoose.Types.ObjectId;
     name: string;
-    type: 'booking_confirmation' | 'check_in_reminder' | 'payment_receipt' | 'kyc_request' | 'custom';
+    type: 'TRANSACTIONAL' | 'MARKETING';
     channels: ('EMAIL' | 'SMS' | 'WHATSAPP')[];
-
     content: {
-        subject?: string; // For email
-        body: string; // Supports variables {{guestName}}, {{checkInDate}}, etc.
+        subject?: string;
+        body: string;
     };
-
-    active: boolean;
-
     createdAt: Date;
     updatedAt: Date;
 }
@@ -23,25 +19,21 @@ const MessageTemplateSchema: Schema = new Schema(
         name: { type: String, required: true },
         type: {
             type: String,
-            enum: ['booking_confirmation', 'check_in_reminder', 'payment_receipt', 'kyc_request', 'custom'],
+            enum: ['TRANSACTIONAL', 'MARKETING'],
             required: true
         },
         channels: [{
             type: String,
             enum: ['EMAIL', 'SMS', 'WHATSAPP']
         }],
-
         content: {
             subject: { type: String },
             body: { type: String, required: true }
-        },
-
-        active: { type: Boolean, default: true }
+        }
     },
     { timestamps: true }
 );
 
-// Indexes
-MessageTemplateSchema.index({ hotelId: 1, type: 1 });
+MessageTemplateSchema.index({ hotelId: 1 });
 
 export const MessageTemplate = mongoose.model<IMessageTemplate>('MessageTemplate', MessageTemplateSchema);

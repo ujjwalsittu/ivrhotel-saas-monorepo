@@ -18,15 +18,18 @@ import brandRoutes from './routes/brand.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import posRoutes from './routes/pos.routes';
 import housekeepingRoutes from './routes/housekeeping.routes';
+import inventoryRoutes from './routes/inventory.routes';
+import channelRoutes from './routes/channel.routes';
+import { requireAuth, requireHotel } from './middleware/tenant';
 import invoiceRoutes from './routes/invoice.routes';
 import financeRoutes from './routes/finance.routes';
 import onboardingRoutes from './routes/onboarding.routes';
 import kycRoutes from './routes/kyc.routes';
 import paymentRoutes from './routes/payment.routes';
-import channelRoutes from './routes/channel.routes';
 import crmRoutes from './routes/crm.routes';
 import healthRoutes from './routes/health.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import websiteRoutes from './routes/website.routes';
 import reportsRoutes from './routes/reports.routes';
 
 dotenv.config();
@@ -53,12 +56,15 @@ app.use('/api/hotels/:hotelId', roomRoutes);
 app.use('/api/hotels/:hotelId/staff', staffRoutes);
 app.use('/api/hotels/:hotelId/bookings', bookingRoutes);
 app.use('/api/hotels/:hotelId/dashboard', dashboardRoutes);
-app.use('/api/hotels/:hotelId/pos', posRoutes);
-app.use('/api/hotels/:hotelId/housekeeping', housekeepingRoutes);
+app.use('/api/hotels/:hotelId/pos', requireAuth, requireHotel(), posRoutes);
+app.use('/api/hotels/:hotelId/housekeeping', requireAuth, requireHotel(), housekeepingRoutes);
+app.use('/api/hotels/:hotelId/inventory', requireAuth, requireHotel(), inventoryRoutes);
+app.use('/api/hotels/:hotelId/channels', requireAuth, requireHotel(), channelRoutes);
 app.use('/api/hotels/:hotelId/invoices', invoiceRoutes);
 app.use('/api/hotels/:hotelId/finance', financeRoutes);
 app.use('/api/hotels/:hotelId/crm', crmRoutes);
 app.use('/api/hotels/:hotelId/analytics', analyticsRoutes); // Analytics routes
+app.use('/api', websiteRoutes); // Website routes have their own structure
 app.use('/api/hotels/:hotelId/reports', reportsRoutes); // Reports routes
 app.use('/api/hotels', onboardingRoutes);
 app.use('/api/kyc', kycRoutes);

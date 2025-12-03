@@ -255,8 +255,22 @@ const Analytics: React.FC = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Dynamic Pricing Section */}
+            <Card className="mt-6">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle>Dynamic Pricing Rules</CardTitle>
+                        <Button size="sm">Add Rule</Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-center text-muted-foreground py-8">
+                        No active pricing rules. Add rules to automatically adjust rates based on demand.
+                    </p>
+                </CardContent>
+            </Card>
         </div>
     );
 };
-
 export default Analytics;
