@@ -6,6 +6,7 @@ import {
     Mail, Megaphone, DollarSign, Settings, Brush, Package,
     BarChart, Globe, LogOut, Building2, ClipboardList, Utensils, BedDouble
 } from 'lucide-react';
+import { SwitchHotel } from '@/components/SwitchHotel';
 
 interface NavItem {
     label: string;
@@ -84,10 +85,13 @@ const HotelAdminLayout: React.FC = () => {
     return (
         <div className="flex h-screen bg-gray-50">
             {/* Sidebar */}
-            <aside className="w-64 bg-white shadow-lg border-r">
-                <div className="p-6 border-b">
-                    <h1 className="text-2xl font-bold text-gray-800">Hotel Admin</h1>
-                    <p className="text-sm text-gray-500 mt-1">Management Portal</p>
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+                <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center gap-2 font-bold text-xl text-blue-600 mb-4">
+                        <LayoutDashboard className="h-6 w-6" />
+                        <span>IVR Hotel</span>
+                    </div>
+                    <SwitchHotel />
                 </div>
 
                 <nav className="mt-2 overflow-y-auto h-[calc(100vh-120px)]">
@@ -131,7 +135,7 @@ const HotelAdminLayout: React.FC = () => {
                         </Link>
                     </div>
                 </nav>
-            </aside>
+            </div> {/* Closing the sidebar div */}
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto">

@@ -18,9 +18,18 @@ const updateConfigSchema = z.object({
     })
 });
 
+import { cacheService } from '../services/cache.service';
+
 export const getPublicConfig = async (req: Request, res: Response) => {
     try {
         const { identifier } = req.params;
+        const cacheKey = `website:config:${identifier}`;
+
+        // Try cache first
+        const cachedConfig = await cacheService.get(cacheKey);
+        if (cachedConfig) {
+            return res.json(cachedConfig);
+        }
 
         // Try to find by slug first, then domain
         let config = await WebsiteConfig.findOne({ slug: identifier });
@@ -31,6 +40,9 @@ export const getPublicConfig = async (req: Request, res: Response) => {
         if (!config) {
             return res.status(404).json({ message: 'Website not found' });
         }
+
+        // Cache for 1 hour
+        await cacheService.set(cacheKey, config, 3600);
 
         res.json(config);
     } catch (error) {
@@ -79,6 +91,14 @@ export const updateWebsiteConfig = async (req: Request, res: Response) => {
             { $set: validatedData },
             { new: true, upsert: true }
         );
+
+        // Invalidate cache
+        if (config) {
+            await cacheService.del(`website:config:${config.slug}`);
+            if (config.domain) {
+                await cacheService.del(`website:config:${config.domain}`);
+            }
+        }
 
         res.json(config);
     } catch (error) {

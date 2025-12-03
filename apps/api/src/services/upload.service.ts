@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { s3Service } from './s3.service';
 import { Request } from 'express';
 
 // Create uploads directory if it doesn't exist
@@ -58,6 +59,24 @@ export const upload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
     }
 });
+
+export const uploadToCloud = async (file: Express.Multer.File): Promise<string> => {
+    // Check if S3 is configured (by checking if s3Service has a client, or just try/catch)
+    // For now, we'll check env vars implicitly via the service behavior or just try it.
+    // A better way is to have a flag or method in s3Service.
+
+    if (process.env.AWS_BUCKET_NAME) {
+        try {
+            return await s3Service.uploadFile(file);
+        } catch (error) {
+            console.error('S3 Upload Failed, falling back to local:', error);
+        }
+    }
+
+    // Fallback to local URL if S3 is not configured or fails
+    // In a real production app, you might want to error out instead of fallback if S3 is expected.
+    return `http://localhost:3000/uploads/${file.filename}`;
+};
 
 /**
  * Get public URL for uploaded file

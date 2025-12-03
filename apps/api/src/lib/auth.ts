@@ -3,13 +3,14 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { organization, jwt, deviceAuthorization, multiSession, lastLoginMethod } from "better-auth/plugins";
 import { passkey } from "@better-auth/passkey";
 import { mongoClient, db } from "./mongodb";
+import { emailService } from "../services/email.service";
 
 export const auth = betterAuth({
     experimental: {
         joins: true,
     },
-    database: mongodbAdapter(db, {
-        client: mongoClient,
+    database: mongodbAdapter(db as any, {
+        client: mongoClient as any,
         transaction: false // Disable transactions for local standalone MongoDB
     }),
 
@@ -84,9 +85,9 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: false, // Set to true in production
-        async sendResetPassword(url, user) {
+        async sendResetPassword({ user, url }) {
             console.log("Reset password url:", url);
-            // TODO: Send email
+            await emailService.sendPasswordReset(user.email, url);
         }
     },
 

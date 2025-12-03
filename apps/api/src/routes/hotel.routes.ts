@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createHotel, getHotel, getHotels } from '../controllers/hotel.controller';
+import { createHotel, getHotel, getHotels, getMyHotels } from '../controllers/hotel.controller';
 import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = Router();
@@ -10,7 +10,8 @@ const router = Router();
 // Getting hotels is Super Admin.
 // Getting single hotel is Hotel Admin or Super Admin.
 
-router.post('/', requireAuth, createHotel); // Protected onboarding
+router.post('/', requireAuth, requireRole(['ADMIN', 'BRAND_ADMIN']), createHotel); // Protected onboarding
+router.get('/my-hotels', requireAuth, getMyHotels);
 router.get('/', requireAuth, requireRole(['SUPER_ADMIN']), getHotels);
 router.get('/:id', requireAuth, requireRole(['SUPER_ADMIN', 'HOTEL_ADMIN']), getHotel);
 

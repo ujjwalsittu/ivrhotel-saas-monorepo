@@ -1,3 +1,5 @@
+import { openAIService } from '../openai.service';
+
 /**
  * AI-Powered Email Parser for OTA Bookings
  * 
@@ -159,35 +161,27 @@ function extractBookingCom(content: string): ParsedBooking | null {
  * Generic AI-powered extraction (for production with OpenAI)
  */
 async function extractGeneric(content: string, subject: string): Promise<ParsedBooking | null> {
-    // TODO: Implement OpenAI API call
-    /*
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    
-    const prompt = `Extract booking details from this email in JSON format:
-    {
-      "bookingId": "string",
-      "guestName": "string",
-      "guestEmail": "string",
-      "guestPhone": "string",
-      "checkInDate": "YYYY-MM-DD",
-      "checkOutDate": "YYYY-MM-DD",
-      "roomType": "string",
-      "totalPrice": number
-    }
-    
-    Email subject: ${subject}
-    Email content: ${content}`;
-    
-    const response = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.1
-    });
-    
-    return JSON.parse(response.choices[0].message.content);
-    */
+    try {
+        const parsed = await openAIService.parseBookingEmail(`Subject: ${subject}\n\n${content}`);
+        if (!parsed) return null;
 
-    return null;
+        return {
+            ota: parsed.platform || 'UNKNOWN',
+            bookingId: parsed.bookingId || '',
+            guestName: parsed.guestName || '',
+            guestEmail: parsed.guestEmail,
+            guestPhone: parsed.guestPhone,
+            checkInDate: parsed.checkInDate,
+            checkOutDate: parsed.checkOutDate,
+            roomType: parsed.roomType || '',
+            totalPrice: parsed.totalPrice,
+            numberOfRooms: 1, // Default
+            numberOfGuests: 1 // Default
+        };
+    } catch (error) {
+        console.error('Generic Extraction Failed:', error);
+        return null;
+    }
 }
 
 /**

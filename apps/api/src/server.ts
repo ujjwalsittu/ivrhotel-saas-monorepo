@@ -30,6 +30,7 @@ import crmRoutes from './routes/crm.routes';
 import healthRoutes from './routes/health.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import websiteRoutes from './routes/website.routes';
+import kioskRoutes from './routes/kiosk.routes';
 import reportsRoutes from './routes/reports.routes';
 
 dotenv.config();
@@ -65,6 +66,7 @@ app.use('/api/hotels/:hotelId/finance', financeRoutes);
 app.use('/api/hotels/:hotelId/crm', crmRoutes);
 app.use('/api/hotels/:hotelId/analytics', analyticsRoutes); // Analytics routes
 app.use('/api', websiteRoutes); // Website routes have their own structure
+app.use('/api/kiosk', kioskRoutes);
 app.use('/api/hotels/:hotelId/reports', reportsRoutes); // Reports routes
 app.use('/api/hotels', onboardingRoutes);
 app.use('/api/kyc', kycRoutes);

@@ -90,6 +90,38 @@ export const getHotel = async (req: Request, res: Response) => {
 
         res.json(hotel);
     } catch (error) {
-        res.status(500).json({ message: 'Internal Server Error', error });
+        res.status(500).json({ message: 'Error fetching hotel', error });
+    }
+};
+
+export const getMyHotels = async (req: Request, res: Response) => {
+    try {
+        const user = (req as any).user;
+        const userId = user.id;
+        const userRole = user.role;
+        const brandId = user.brandId;
+
+        let query: any = {};
+
+        if (userRole === 'admin') {
+            // Platform admin sees all
+        } else if (userRole === 'brand_admin') {
+            query.brandId = brandId;
+        } else {
+            // Managers/Staff see hotels they are assigned to (simplified for now to primaryHotelId or all in brand)
+            // In a real app, we'd check a 'hotels' array on the user or a mapping table
+            if (user.primaryHotelId) {
+                query._id = user.primaryHotelId;
+            } else if (brandId) {
+                query.brandId = brandId;
+            } else {
+                return res.json([]);
+            }
+        }
+
+        const hotels = await Hotel.find(query).select('name _id slug address.city');
+        res.json(hotels);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching hotels', error });
     }
 };

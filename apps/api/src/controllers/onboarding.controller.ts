@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Hotel } from '../models/Hotel';
 import { z } from 'zod';
 import { upload, getFileUrl, deleteFile } from '../services/upload.service';
+import { emailService } from '../services/email.service';
 
 // Validation schemas
 const onboardingDataSchema = z.object({
@@ -278,7 +279,9 @@ export const approveHotel = async (req: Request, res: Response) => {
 
         await hotel.save();
 
-        // TODO: Send activation email to hotel admin
+        if (hotel.email) {
+            await emailService.sendWelcome(hotel.email, hotel.name || 'Hotel Partner');
+        }
 
         res.json({
             success: true,

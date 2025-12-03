@@ -57,5 +57,6 @@ const BookingSchema: Schema = new Schema(
 
 BookingSchema.index({ hotelId: 1, checkInDate: 1, checkOutDate: 1 });
 BookingSchema.index({ hotelId: 1, status: 1 });
+BookingSchema.index({ hotelId: 1, status: 1, checkInDate: 1 }); // Optimized for occupancy queries
 
 export const Booking = mongoose.model<IBooking>('Booking', BookingSchema);
